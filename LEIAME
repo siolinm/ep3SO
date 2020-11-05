@@ -1,0 +1,10 @@
+Esse é o projeto para o Exercício-Projeto 3 de MAC0422 - Sistemas Operacionais
+do IME-USP, ministrada pelo Prof. Dr. Daniel Macêdo Batista. Ele foi realizado
+em dupla pelos alunos Lucas Paiolla Forastiere (NUSP: 11221911) e Marcos Siolin
+Martins (NUSP: 11221709).
+
+Para compilar o ep3:
+    make ep3
+
+Para executar o ep3:
+    ./ep3
