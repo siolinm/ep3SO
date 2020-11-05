@@ -1,15 +1,16 @@
 DIRNAME    = ep3-lucas-marcos
-EPOBJS     = ep3.o util.o
+EPOBJS     = ep3.o util.o commands.o
 CFLAGS     = -Wall -g -pedantic -Wno-unused-result
+COMPILER   = g++
 LIBS_EP3   = # -lpthread
 
 default: ep3
 
 ep3: $(EPOBJS)
-	gcc $(CFLAGS) $(EPOBJS) -o ep3 $(LIBS_EP3)
+	$(COMPILER) $(CFLAGS) $(EPOBJS) -o ep3 $(LIBS_EP3)
 
 %.o: %.c %.h util.h
-	gcc $(CFLAGS) -c $<
+	$(COMPILER) $(CFLAGS) -c $<
 
 tar:
 	rm -Rf ../$(DIRNAME)
@@ -22,12 +23,12 @@ tar:
 	cp ../slides/slides.pdf ../$(DIRNAME)/slides.pdf
 
 	# copia o codigo fonte
-	for a in *.c; do \
+	for a in *.cpp; do \
 		cp $$a ../$(DIRNAME)/$$a; \
 	done
 
-	# (se houverem .h)
-	# for a in *.h; do \
+	# (se houverem .hpp)
+	# for a in *.hpp; do \
 	# 	cp $$a ../$(DIRNAME)/$$a; \
 	# done
 
@@ -37,4 +38,4 @@ tar:
 
 
 clean:
-	rm *.o ep3-lucas-marcos *~
+	rm *.o ep3 *~
