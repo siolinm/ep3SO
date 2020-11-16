@@ -1,72 +1,68 @@
-#include"commands.hpp"
+#include "commands.hpp"
 
-void mount(){
+void mount() {
     string arquivo;
     cin >> arquivo;
 
     cout << arquivo << "\n";
 }
 
-void cp(){
+void cp() {
     string origem, destino;
     cin >> origem >> destino;
 
     cout << origem << " " << destino << "\n";
 }
 
-void mkdir(){
+void mkdir() {
     string diretorio;
     cin >> diretorio;
 
     cout << diretorio << "\n";
 }
 
-void rmdir(){
+void rmdir() {
     string diretorio;
     cin >> diretorio;
 
     cout << diretorio << "\n";
 }
 
-void cat(){
+void cat() {
     string arquivo;
     cin >> arquivo;
 
     cout << arquivo << "\n";
 }
 
-void touch(){
+void touch() {
     string arquivo;
     cin >> arquivo;
 
     cout << arquivo << "\n";
 }
 
-void rm(){
+void rm() {
     string arquivo;
     cin >> arquivo;
 
     cout << arquivo << "\n";
 }
 
-void ls(){
+void ls() {
     string diretorio;
     cin >> diretorio;
 
     cout << diretorio << "\n";
 }
 
-void find(){
+void find() {
     string diretorio, arquivo;
     cin >> diretorio >> arquivo;
 
     cout << diretorio << " " << arquivo << "\n";
 }
 
-void df(){
+void df() { }
 
-}
-
-void umount(){
-    
-}
+void umount() { }
