@@ -23,36 +23,95 @@ using namespace std;
 #define EXIT "sai"
 
 #define MAX_SUB_ARQUIVOS 100
-#define TAM_FAT 100000
-#define TAM_BITMAP 10000
+#define UNI_ALOCACAO 4000
+#define NUM_BLOCOS 100000000 / (UNI_ALOCACAO + 6)
+#define TAM_BITMAP NUM_BLOCOS
+#define TAM_FAT 5 * NUM_BLOCOS
 
-class arquivo {
+#define BLOCO_NULO -1
+
+
+class Escrevivel {
   public:
-    string nome; // Nome do arquivo
-    bool ehDir;  // True se for um diretório
-    int tamanho; // Tamanho em bytes (cabe em int pois 100MB = 1e8 bytes)
-    time_t tempo_criado;     // Instante criado
-    time_t tempo_modificado; // Última modificação no arquivo
-    time_t tempo_acesso;     // Tempo de último acesso ao arquivo
+    virtual void carrega(unsigned int) = 0;
+    virtual void salva(unsigned int) = 0;
+};
+
+class ArquivoGenerico : public Escrevivel {
+  protected:
+    const int TAM_TEMPO = 10;
+    const int TAM_TAMANHO = 8;
+
+  public:
+    string nome;            // Nome do arquivo
+    time_t tempoCriado;     // Instante criado
+    time_t tempoModificado; // Última modificação no arquivo
+    time_t tempoAcesso;     // Tempo de último acesso ao arquivo
     // Para as três variáveis acima, é preciso converter usando uma função para
     // obtermos a data exata (ctime).
-    string conteudo;                         // Conteúdo do arquivo
-    arquivo *sub_arquivos[MAX_SUB_ARQUIVOS]; // Lista de arquivos do diretório
-    /* TODO: Pensar dps se deve ser um ponteiro para um arquivo em si ou se
-     * deve ser para a posição da memória do arquivo <16-11-20, Lucas> */
+
+    void carrega(unsigned int);
+    void salva(unsigned int);
 };
 
-/* TODO: Pensar se precisa mesmo das classes <16-11-20, Lucas> */
-class FAT {
+class Arquivo : public ArquivoGenerico {
   public:
-    /* TODO: Ideia de transformar em um uint isso aqui <16-11-20, Lucas> */
-    int ponteiros[TAM_FAT];
+    unsigned int tamanho; // Tamanho em bytes
+    string conteudo;      // Conteúdo do arquivo
+
+    void carrega(unsigned int);
+    void salva(unsigned int);
 };
 
-class bitmap {
+class ArquivoInfo {
+  public:
+    unsigned int pt_nome;   // Ponteiro para o nome no heap
+    unsigned int tamanho;   // Tamanho em bytes
+    bool ehDiretorio;       // True se é um diretório
+    time_t tempoCriado;     // Instante criado
+    time_t tempoModificado; // Última modificação no arquivo
+    time_t tempoAcesso;     // Tempo de último acesso ao arquivo
+    unsigned int pt_cabeca; // Ponteiro para o bloco cabeça do arquivo
+};
+
+class Diretorio : public ArquivoGenerico {
+  public:
+    ArquivoInfo subArquivo[MAX_SUB_ARQUIVOS];
+    // O diretório aponta para o endereço do bloco dos subdiretório
+    string heap; // Heap com os nomes de cada arquivo
+
+    void carrega(unsigned int);
+    void salva(unsigned int);
+};
+
+class FAT_t : public Escrevivel {
+  public:
+    unsigned int ponteiro[TAM_FAT];
+
+    void carrega(unsigned int);
+    void salva(unsigned int);
+};
+
+class Bitmap_t : public Escrevivel {
   public:
     bool cheio[TAM_BITMAP]; // True -> Vazio | False -> Cheio
+
+    void carrega(unsigned int);
+    void salva(unsigned int);
 };
 
+// string representando o disco
+extern string discoAtual;
+
+extern FAT_t FAT;
+extern Bitmap_t Bitmap;
+
+// Pega as mudanças realizadas até agora e atualiza o disco
+void atualizaDisco();
+
+unsigned int blocoEmEndereco(unsigned int);
+unsigned int enderecoEmBloco(unsigned int);
+
+unsigned int blocoEmBaseLimite(unsigned int, unsigned int &, unsigned int &);
 
 #endif

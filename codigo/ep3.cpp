@@ -1,3 +1,4 @@
+#include <fstream>
 #include "commands.hpp"
 
 #define PROMPT cout << "[ep3]: ";
@@ -29,14 +30,16 @@ void parse(string &command) {
 }
 
 int main() {
-    string command;
-    PROMPT;
+    // string command;
+    // PROMPT;
 
-    while ((cin >> command) && command != EXIT) {
-        parse(command);
-        PROMPT;
-    }
-    cout << "\n";
+    // while ((cin >> command) && command != EXIT) {
+        // parse(command);
+        // PROMPT;
+    // }
+    // cout << "\n";
+
+    string s = "";
 
     return 0;
 }

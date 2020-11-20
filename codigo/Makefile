@@ -9,7 +9,7 @@ default: ep3
 ep3: $(EPOBJS)
 	$(COMPILER) $(CFLAGS) $(EPOBJS) -o ep3 $(LIBS_EP3)
 
-%.o: %.c %.h util.h
+%.o: %.cpp %.hpp util.hpp
 	$(COMPILER) $(CFLAGS) -c $<
 
 tar:
@@ -28,9 +28,9 @@ tar:
 	done
 
 	# (se houverem .hpp)
-	# for a in *.hpp; do \
-	# 	cp $$a ../$(DIRNAME)/$$a; \
-	# done
+	for a in *.hpp; do \
+		cp $$a ../$(DIRNAME)/$$a; \
+	done
 
 	# gera ../$(DIRNAME).tar.gz
 	tar -czvf ../$(DIRNAME).tar.gz ../$(DIRNAME)
