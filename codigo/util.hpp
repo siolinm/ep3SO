@@ -6,6 +6,7 @@
 #include <ctime>
 #include <iostream>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -22,14 +23,15 @@ using namespace std;
 #define UMOUNT "umount"
 #define EXIT "sai"
 
-#define MAX_SUB_ARQUIVOS 100
 #define UNI_ALOCACAO 4000
 #define NUM_BLOCOS 100000000 / (UNI_ALOCACAO + 6)
+#define TAM_BLOCO 5
 #define TAM_BITMAP NUM_BLOCOS
-#define TAM_FAT 5 * NUM_BLOCOS
+#define TAM_FAT TAM_BLOCO * NUM_BLOCOS
+#define TAM_ENDERECO 8
 
 #define BLOCO_NULO -1
-
+#define CHAR_NULO 0
 
 class Escrevivel {
   public:
@@ -41,6 +43,8 @@ class ArquivoGenerico : public Escrevivel {
   protected:
     const int TAM_TEMPO = 10;
     const int TAM_TAMANHO = 8;
+    const int TAM_NOME = 255;
+    /* TODO: Fazer algo pra limitar o nome <23-11-20, Lucas> */
 
   public:
     string nome;            // Nome do arquivo
@@ -66,8 +70,9 @@ class Arquivo : public ArquivoGenerico {
 class ArquivoInfo {
   public:
     unsigned int pt_nome;   // Ponteiro para o nome no heap
-    unsigned int tamanho;   // Tamanho em bytes
-    bool ehDiretorio;       // True se é um diretório
+    string nome;            // O nome do arquivo
+    unsigned int tamanho;   // Tamanho em bytes (se for dir, será 0)
+    char ehDiretorio;       // 'D' se é um diretório e 'A' se é um arquivo
     time_t tempoCriado;     // Instante criado
     time_t tempoModificado; // Última modificação no arquivo
     time_t tempoAcesso;     // Tempo de último acesso ao arquivo
@@ -76,7 +81,7 @@ class ArquivoInfo {
 
 class Diretorio : public ArquivoGenerico {
   public:
-    ArquivoInfo subArquivo[MAX_SUB_ARQUIVOS];
+    vector<ArquivoInfo> subArquivo;
     // O diretório aponta para o endereço do bloco dos subdiretório
     string heap; // Heap com os nomes de cada arquivo
 
@@ -113,5 +118,7 @@ unsigned int blocoEmEndereco(unsigned int);
 unsigned int enderecoEmBloco(unsigned int);
 
 unsigned int blocoEmBaseLimite(unsigned int, unsigned int &, unsigned int &);
+
+string intParaString(unsigned int, unsigned int);
 
 #endif
