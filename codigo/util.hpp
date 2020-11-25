@@ -27,7 +27,7 @@ using namespace std;
 #define NUM_BLOCOS 100000000 / (UNI_ALOCACAO + 6)
 #define TAM_BLOCO 5
 #define TAM_BITMAP NUM_BLOCOS
-#define TAM_FAT TAM_BLOCO * NUM_BLOCOS
+#define TAM_FAT TAM_BLOCO *NUM_BLOCOS
 #define TAM_ENDERECO 8
 
 #define BLOCO_NULO -1
@@ -35,8 +35,8 @@ using namespace std;
 
 class Escrevivel {
   public:
-    virtual void carrega(unsigned int) = 0;
-    virtual void salva(unsigned int) = 0;
+    virtual void carrega(int) = 0;
+    virtual void salva() = 0;
 };
 
 class ArquivoGenerico : public Escrevivel {
@@ -46,6 +46,7 @@ class ArquivoGenerico : public Escrevivel {
     const int TAM_NOME = 255;
     /* TODO: Fazer algo pra limitar o nome <23-11-20, Lucas> */
 
+
   public:
     string nome;            // Nome do arquivo
     time_t tempoCriado;     // Instante criado
@@ -53,60 +54,82 @@ class ArquivoGenerico : public Escrevivel {
     time_t tempoAcesso;     // Tempo de último acesso ao arquivo
     // Para as três variáveis acima, é preciso converter usando uma função para
     // obtermos a data exata (ctime).
+    int numPrimeiroBloco; // Ponteiro para o bloco cabeça do arquivo
 
-    void carrega(unsigned int);
-    void salva(unsigned int);
+    void carrega(int);
+    void salva();
 };
 
 class Arquivo : public ArquivoGenerico {
   public:
-    unsigned int tamanho; // Tamanho em bytes
-    string conteudo;      // Conteúdo do arquivo
+    // A quantidade atual de arquivos regulares criados
+    static int qntArquivos;
 
-    void carrega(unsigned int);
-    void salva(unsigned int);
+    int tamanho;     // Tamanho em bytes
+    string conteudo; // Conteúdo do arquivo
+
+    void carrega(int);
+    void salva();
 };
 
 class ArquivoInfo {
   public:
-    unsigned int pt_nome;   // Ponteiro para o nome no heap
+    int ptNome;             // Ponteiro para o nome no heap
     string nome;            // O nome do arquivo
-    unsigned int tamanho;   // Tamanho em bytes (se for dir, será 0)
+    int tamanho;            // Tamanho em bytes (se for dir, será 0)
     char ehDiretorio;       // 'D' se é um diretório e 'A' se é um arquivo
     time_t tempoCriado;     // Instante criado
     time_t tempoModificado; // Última modificação no arquivo
     time_t tempoAcesso;     // Tempo de último acesso ao arquivo
-    unsigned int pt_cabeca; // Ponteiro para o bloco cabeça do arquivo
+    int numPrimeiroBloco;   // Ponteiro para o bloco cabeça do arquivo
 };
 
 class Diretorio : public ArquivoGenerico {
   public:
+    // A quantidade atual de diretórios criados
+    static int qntDiretorios;
+
     vector<ArquivoInfo> subArquivo;
     // O diretório aponta para o endereço do bloco dos subdiretório
     string heap; // Heap com os nomes de cada arquivo
 
-    void carrega(unsigned int);
-    void salva(unsigned int);
+    void carrega(int);
+    void salva();
 };
 
 class FAT_t : public Escrevivel {
   public:
-    unsigned int ponteiro[TAM_FAT];
+    int ponteiro[TAM_FAT];
 
-    void carrega(unsigned int);
-    void salva(unsigned int);
+    void carrega(int);
+    void salva();
+
+    int alocaBloco(int);
 };
 
 class Bitmap_t : public Escrevivel {
   public:
     bool cheio[TAM_BITMAP]; // True -> Vazio | False -> Cheio
 
-    void carrega(unsigned int);
-    void salva(unsigned int);
+    void carrega(int);
+    void salva();
+
+    // Ponteiro para o próximo bloco de memória livre
+    int proxLivre;
+
+    // Quantidade de blocos livres
+    int blocosLivres;
+
+    // Função que devolve o próximo bloco livre ou uma exceção caso não tenha
+    // nenhum bloco livre
+    int pegaProxLivre();
 };
 
 // string representando o disco
 extern string discoAtual;
+
+// Nome do arquivo que contém o disco salvo
+extern string nomeArquivo;
 
 extern FAT_t FAT;
 extern Bitmap_t Bitmap;
@@ -114,11 +137,11 @@ extern Bitmap_t Bitmap;
 // Pega as mudanças realizadas até agora e atualiza o disco
 void atualizaDisco();
 
-unsigned int blocoEmEndereco(unsigned int);
-unsigned int enderecoEmBloco(unsigned int);
+int blocoEmEndereco(int);
+int enderecoEmBloco(int);
 
-unsigned int blocoEmBaseLimite(unsigned int, unsigned int &, unsigned int &);
+int blocoEmBaseLimite(int, int &, int &);
 
-string intParaString(unsigned int, unsigned int);
+string intParaString(int, int);
 
 #endif

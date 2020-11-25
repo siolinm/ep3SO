@@ -30,16 +30,14 @@ void parse(string &command) {
 }
 
 int main() {
-    // string command;
-    // PROMPT;
+    string command;
+    PROMPT;
 
-    // while ((cin >> command) && command != EXIT) {
-        // parse(command);
-        // PROMPT;
-    // }
-    // cout << "\n";
-
-    string s = "";
+    while ((cin >> command) && command != EXIT) {
+        parse(command);
+        PROMPT;
+    }
+    cout << "\n";
 
     return 0;
 }

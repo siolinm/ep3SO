@@ -11,23 +11,22 @@ string discoAtual;
 FAT_t FAT;
 Bitmap_t Bitmap;
 
-unsigned int blocoEmEndereco(unsigned int numBloco) {
+int blocoEmEndereco(int numBloco) {
     return TAM_BITMAP + TAM_FAT + numBloco * 4000;
 }
 
-unsigned int enderecoEmBloco(unsigned int endereco) {
+int enderecoEmBloco(int endereco) {
     return (endereco - TAM_BITMAP - TAM_FAT) / 4000;
 }
 
-unsigned int blocoEmBaseLimite(unsigned int numBloco, unsigned int &base,
-                               unsigned int &limite) {
-    unsigned int end = blocoEmEndereco(numBloco);
+int blocoEmBaseLimite(int numBloco, int &base, int &limite) {
+    int end = blocoEmEndereco(numBloco);
     base = end;
     limite = end + 4000;
     return end;
 }
 
-string intParaString(unsigned int inteiro, unsigned int tamanho) {
+string intParaString(int inteiro, int tamanho) {
     string ret;
     ret = to_string(inteiro);
     reverse(ret.begin(), ret.end());
@@ -36,14 +35,14 @@ string intParaString(unsigned int inteiro, unsigned int tamanho) {
     return ret;
 }
 
-void ArquivoGenerico::carrega(unsigned int numBloco) { }
+void ArquivoGenerico::carrega(int numBloco) { }
 
-void ArquivoGenerico::salva(unsigned int numBloco) { }
+void ArquivoGenerico::salva() { }
 
-void Arquivo::carrega(unsigned int numBloco) {
+void Arquivo::carrega(int numBloco) {
     // Base e limite para o bloco que estamos atualmente carregando
-    unsigned int base, limite;
-    unsigned int ende; // Endereço atual sendo lido
+    int base, limite;
+    int ende; // Endereço atual sendo lido
 
     auto pegaTempo = [&ende](int tam) {
         string aux;
@@ -54,7 +53,9 @@ void Arquivo::carrega(unsigned int numBloco) {
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
 
-    ende++; // Pular o 'A'
+    numPrimeiroBloco = enderecoEmBloco(ende);
+
+    ende += 2; // Pular o '\\' e o 'A'
 
     // Pegar os tempos criado, modificado e acessado
     for (time_t *tempo : { &tempoCriado, &tempoModificado, &tempoAcesso })
@@ -80,19 +81,22 @@ void Arquivo::carrega(unsigned int numBloco) {
     }
 }
 
-void Arquivo::salva(unsigned int numBloco) {
-    unsigned int base, limite;
-    unsigned int ende; // Endereço atual sendo lido
+void Arquivo::salva() {
+    int base, limite;
+    int ende; // Endereço atual sendo lido
+    int numBloco = numPrimeiroBloco;
 
     auto escreveTempo = [&ende, this](time_t tempo) {
         string aux;
         aux = to_string(tempo);
-        if (aux.size() != TAM_TEMPO)
+        if ((int) aux.size() != TAM_TEMPO)
             throw "Tempo deveria ser igual a " + to_string(TAM_TEMPO);
         for (int i = 0; i < TAM_TEMPO; i++, ende++) discoAtual[ende] = aux[i];
     };
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
+
+    discoAtual[ende++] = '\\';
 
     discoAtual[ende++] = 'A';
 
@@ -106,12 +110,13 @@ void Arquivo::salva(unsigned int numBloco) {
     for (int i = 0; i < TAM_TAMANHO; i++, ende++) discoAtual[ende] = aux[i];
 
     // Escrever o nome do arquivo
-    for (int i = 0; i < nome.size(); i++, ende++) discoAtual[ende] = nome[i];
+    for (int i = 0; i < (int) nome.size(); i++, ende++)
+        discoAtual[ende] = nome[i];
     discoAtual[ende++] = '|';
 
     int i = 0; // posicao atual do conteudo
     while (numBloco != BLOCO_NULO) {
-        for (; i < conteudo.size() && ende < limite; i++, ende++)
+        for (; i < (int) conteudo.size() && ende < limite; i++, ende++)
             discoAtual[ende] = conteudo[i];
 
         // se o conteudo acabou antes do limite do bloco, preenchemos com 'nulo'
@@ -123,9 +128,9 @@ void Arquivo::salva(unsigned int numBloco) {
     }
 }
 
-void Diretorio::carrega(unsigned int numBloco) {
-    unsigned int base, limite;
-    unsigned int ende; // Endereço atual sendo lido
+void Diretorio::carrega(int numBloco) {
+    int base, limite;
+    int ende; // Endereço atual sendo lido
 
     auto pulaBloco = [&ende, &numBloco, &base, &limite]() {
         if (ende == limite) {
@@ -143,7 +148,9 @@ void Diretorio::carrega(unsigned int numBloco) {
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
 
-    ende++; // Pular o 'D'
+    numPrimeiroBloco = enderecoEmBloco(ende);
+
+    ende += 2; // Pular o '\\' e 'D'
 
     // Pegar os tempos criado, modificado e acessado
     for (time_t *tempo : { &tempoCriado, &tempoModificado, &tempoAcesso })
@@ -162,7 +169,7 @@ void Diretorio::carrega(unsigned int numBloco) {
             pulaBloco();
             aux.push_back(discoAtual[ende]);
         }
-        subarq.pt_nome = stoi(aux);
+        subarq.ptNome = stoi(aux);
 
         // Pegar a flag de arquivo ou diretório
         pulaBloco();
@@ -182,7 +189,7 @@ void Diretorio::carrega(unsigned int numBloco) {
         subarq.tamanho = stoi(aux);
 
         // Pegar o nome na heap
-        int enderecoPonteiro = subarq.pt_nome;
+        int enderecoPonteiro = subarq.ptNome;
         aux = "";
         pulaBloco();
         for (; discoAtual[enderecoPonteiro] != '|';
@@ -192,9 +199,10 @@ void Diretorio::carrega(unsigned int numBloco) {
     }
 }
 
-void Diretorio::salva(unsigned int numBloco) {
-    unsigned int base, limite;
-    unsigned int ende; // Endereço atual sendo lido
+void Diretorio::salva() {
+    int base, limite;
+    int ende; // Endereço atual sendo lido
+    int numBloco = numPrimeiroBloco;
 
     auto alocaaux = [&ende, &numBloco, &base, &limite]() {
         if (ende == limite) {
@@ -209,7 +217,7 @@ void Diretorio::salva(unsigned int numBloco) {
     auto escreveTempo = [&ende, &alocaaux, this](time_t tempo) {
         string aux;
         aux = to_string(tempo);
-        if (aux.size() != TAM_TEMPO)
+        if ((int) aux.size() != TAM_TEMPO)
             throw "Tempo deveria ser igual a " + to_string(TAM_TEMPO);
         for (int i = 0; i < TAM_TEMPO; i++, ende++) {
             alocaaux();
@@ -219,6 +227,7 @@ void Diretorio::salva(unsigned int numBloco) {
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
 
+    discoAtual[ende++] = '\\';
     discoAtual[ende++] = 'D';
 
     // Escrever os tempos criado, modificado e acessado
@@ -226,7 +235,8 @@ void Diretorio::salva(unsigned int numBloco) {
         escreveTempo(tempo);
 
     // Escrever o nome do diretório
-    for (int i = 0; i < nome.size(); i++, ende++) discoAtual[ende] = nome[i];
+    for (int i = 0; i < (int) nome.size(); i++, ende++)
+        discoAtual[ende] = nome[i];
     discoAtual[ende++] = '|';
 
     // Escrever as entradas de arquivo
@@ -274,7 +284,7 @@ void Diretorio::salva(unsigned int numBloco) {
         }
 
         // Escrevo o nome na heap
-        for (int i = 0; i < subarq.nome.size(); i++, ende++) {
+        for (int i = 0; i < (int) subarq.nome.size(); i++, ende++) {
             alocaaux();
             discoAtual[ende] = subarq.nome[i];
         }
@@ -283,7 +293,7 @@ void Diretorio::salva(unsigned int numBloco) {
     }
 }
 
-void FAT_t::carrega(unsigned int numBloco) {
+void FAT_t::carrega(int numBloco) {
     string aux;
     for (int j = 0, ende = TAM_BITMAP; j < NUM_BLOCOS; j++) {
         aux = "";
@@ -293,19 +303,56 @@ void FAT_t::carrega(unsigned int numBloco) {
     }
 }
 
-void FAT_t::salva(unsigned int numBloco) {
+void FAT_t::salva() {
     string aux;
     for (int j = 0, ende = TAM_BITMAP; j < NUM_BLOCOS; j++) {
         aux = intParaString(ponteiro[j], TAM_BLOCO);
-        for (int k = 0; k < TAM_BLOCO; k++, ende++)
-            discoAtual[ende] = aux[k];
+        for (int k = 0; k < TAM_BLOCO; k++, ende++) discoAtual[ende] = aux[k];
     }
 }
 
-void Bitmap_t::carrega(unsigned int numBloco) {
-    for (int i = 0; i < TAM_BITMAP; i++) cheio[i] = (bool) discoAtual[i] - '0';
+int FAT_t::alocaBloco(int numPrimeiroBloco) {
+    try {
+        int bloco_livre = Bitmap.pegaProxLivre();
+
+        while (ponteiro[numPrimeiroBloco] != BLOCO_NULO)
+            numPrimeiroBloco = ponteiro[numPrimeiroBloco];
+
+        ponteiro[numPrimeiroBloco] = bloco_livre;
+        Bitmap.cheio[bloco_livre] = true;
+        Bitmap.blocosLivres--;
+        ponteiro[bloco_livre] = BLOCO_NULO;
+
+        return bloco_livre;
+    } catch (string erro) {
+        cerr << "Erro ao alocar um bloco de memória:\n" << erro << endl;
+        return -1;
+    }
+    return -1;
 }
 
-void Bitmap_t::salva(unsigned int numBloco) {
+void Bitmap_t::carrega(int numBloco) {
+    blocosLivres = 0;
+    for (int i = 0; i < TAM_BITMAP; i++) {
+        cheio[i] = (bool) discoAtual[i] - '0';
+        if (!cheio[i]) blocosLivres++;
+    }
+}
+
+void Bitmap_t::salva() {
     for (int i = 0; i < TAM_BITMAP; i++) discoAtual[i] = (char) cheio[i] + '0';
+}
+
+int Bitmap_t::pegaProxLivre() {
+    int blocoInicial = proxLivre - 1;
+    if (blocoInicial < 0) blocoInicial += TAM_BITMAP;
+
+    while (cheio[proxLivre] == true && proxLivre != blocoInicial) {
+        proxLivre++;
+        proxLivre %= TAM_BITMAP;
+    }
+
+    if (proxLivre == blocoInicial) throw "O disco está cheio.";
+
+    return proxLivre;
 }

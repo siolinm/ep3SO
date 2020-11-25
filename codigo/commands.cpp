@@ -1,10 +1,19 @@
 #include "commands.hpp"
 
-void mount() {
-    string arquivo;
-    cin >> arquivo;
+#include <fstream>
+#include <sstream>
 
-    cout << arquivo << "\n";
+
+void mount() {
+    cin >> nomeArquivo;
+
+    ifstream arquivo(nomeArquivo);
+    stringstream buffer;
+    buffer << arquivo.rdbuf();
+    discoAtual = buffer.str();
+    arquivo.close();
+
+
 }
 
 void cp() {
@@ -18,7 +27,7 @@ void mkdir() {
     string diretorio;
     cin >> diretorio;
 
-    cout << diretorio << "\n";
+    // cout << diretorio << "\n";
 }
 
 void rmdir() {
@@ -65,4 +74,9 @@ void find() {
 
 void df() { }
 
-void umount() { }
+void umount() {
+    ofstream arquivo(nomeArquivo);
+    arquivo << discoAtual;
+    // Free em tudo os bagulho
+    arquivo.close();
+}
