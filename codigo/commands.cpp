@@ -34,6 +34,7 @@ void mount() {
 
     // Criamos a árvore de arquivos na memória principal
     root.carrega(0);
+    root.informacoes.imprimeInfos();
 }
 
 void cp() {

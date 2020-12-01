@@ -158,6 +158,9 @@ int blocoEmBaseLimite(int, int &, int &);
 
 string intParaString(int, int);
 
+string intParaMes(int inteiro);
+string bytesFormatados(int tamanhoBytes);
+
 ArquivoGenerico* caminhoParaArquivo(string caminho);
 
 #endif

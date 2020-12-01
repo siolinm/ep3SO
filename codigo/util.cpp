@@ -1,5 +1,7 @@
 #include "util.hpp"
 
+#include <math.h>
+
 #include <algorithm>
 #include <exception>
 #include <fstream>
@@ -38,6 +40,37 @@ string intParaString(int inteiro, int tamanho) {
     return ret;
 }
 
+string intParaMes(int inteiro) {
+    vector<string> meses { "jan", "fev", "mar", "abr", "mai", "jun",
+                           "jul", "aug", "set", "out", "nov", "dez" };
+    return meses[inteiro];
+}
+
+string bytesFormatados(int tamanhoBytes) {
+    double tamanho = tamanhoBytes;
+    stringstream ss;
+    if (tamanho / 1e6 >= 1) {
+        tamanho /= 1e6;
+        if (tamanho - floor(tamanho) != 0) {
+            tamanho = floor(tamanho * 10) / 10;
+        }
+        ss << tamanho;
+        return ss.str().append("M");
+    } else if (tamanho / 1e3 >= 1) {
+        tamanho /= 1e3;
+
+        if (tamanho > 100) tamanho = round(tamanho);
+
+        if (tamanho - floor(tamanho) != 0) {
+            tamanho = floor(tamanho * 10) / 10;
+        }
+        ss << tamanho;
+
+        return ss.str().append("k");
+    } else
+        return to_string(tamanhoBytes);
+}
+
 void ArquivoInfo::atualizaTempo(int bitmask) {
     if (bitmask < 1 && bitmask > 7) return;
 
@@ -51,9 +84,21 @@ void ArquivoInfo::atualizaTempo(int bitmask) {
 }
 
 void ArquivoInfo::imprimeInfos() {
+    auto imprimeTempo = [](time_t *tempo) {
+        struct tm *timeInfo;
+        timeInfo = localtime(tempo);
+        cout << timeInfo->tm_mday << " " << intParaMes(timeInfo->tm_mon) << " "
+             << setw(2) << setfill('0') << timeInfo->tm_hour << ":" << setw(2)
+             << setfill('0') << timeInfo->tm_min << " ";
+    };
+
     cout << ehDiretorio << " ";
-    cout << setw(5) << ((ehDiretorio == 'D') ? "-" : to_string(tamanho)) << " ";
-    cout <<
+    cout << setw(5) << ((ehDiretorio == 'D') ? "-" : bytesFormatados(tamanho))
+         << " ";
+    // TEMPORARIO: depois deixar apenas o tempo de última modificação
+    for (time_t *tempo : { &tempoCriado, &tempoModificado, &tempoAcesso })
+        imprimeTempo(tempo);
+
     cout << nome << endl;
 }
 
@@ -410,7 +455,7 @@ ArquivoGenerico *Diretorio::busca(string nomeArquivo) {
 void Root::inicializa() {
     informacoes.nome = "/";
     informacoes.atualizaTempo(T_TODOS);
-    informacoes.ehDiretorio = true;
+    informacoes.ehDiretorio = 'D';
     informacoes.ptNome = 0;
     informacoes.pai = nullptr;
     informacoes.tamanho = 0;

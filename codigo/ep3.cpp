@@ -1,5 +1,12 @@
+#include <time.h>
+
 #include <fstream>
+#include <iomanip>
+
 #include "commands.hpp"
+#include "util.hpp"
+
+using namespace std;
 
 #define PROMPT cout << "[ep3]: ";
 
