@@ -9,11 +9,31 @@ void mount() {
 
     ifstream arquivo(nomeArquivo);
     stringstream buffer;
+
+    if (!arquivo.is_open()) {
+        ofstream arqTmp(nomeArquivo);
+        string aux(TAM_MAX_ARQ, CHAR_NULO);
+        discoAtual = aux;
+
+        FAT.inicializa();
+        Bitmap.inicializa();
+        root.inicializa();
+        FAT.salva();
+        Bitmap.salva();
+        root.salva();
+
+        arqTmp << discoAtual;
+        arqTmp.close();
+
+        arquivo.open(nomeArquivo);
+    }
+
     buffer << arquivo.rdbuf();
     discoAtual = buffer.str();
     arquivo.close();
 
-
+    // Criamos a árvore de arquivos na memória principal
+    root.carrega(0);
 }
 
 void cp() {

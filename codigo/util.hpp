@@ -10,33 +10,48 @@
 
 using namespace std;
 
-#define MOUNT "mount"
-#define COPY "cp"
-#define MKDIR "mkdir"
-#define RMDIR "rmdir"
-#define CAT "cat"
-#define TOUCH "touch"
-#define RM "rm"
-#define LS "ls"
-#define FIND "find"
-#define DF "df"
-#define UMOUNT "umount"
-#define EXIT "sai"
-
+#define TAM_MAX_ARQ 100000000
 #define UNI_ALOCACAO 4000
-#define NUM_BLOCOS 100000000 / (UNI_ALOCACAO + 6)
+#define NUM_BLOCOS TAM_MAX_ARQ / (UNI_ALOCACAO + 6)
 #define TAM_BLOCO 5
 #define TAM_BITMAP NUM_BLOCOS
 #define TAM_FAT TAM_BLOCO *NUM_BLOCOS
 #define TAM_ENDERECO 8
 
 #define BLOCO_NULO -1
-#define CHAR_NULO 0
+#define CHAR_NULO ' '
+
+#define T_CRIADO 1
+#define T_MODIFICADO 2
+#define T_ACESSO 4
+#define T_TODOS T_MODIFICADO + T_CRIADO + T_ACESSO
 
 class Escrevivel {
   public:
     virtual void carrega(int) = 0;
     virtual void salva() = 0;
+};
+
+class Diretorio;
+
+class ArquivoInfo {
+  public:
+    int ptNome;             // Ponteiro para o nome no heap
+    string nome;            // O nome do arquivo
+    int tamanho;            // Tamanho em bytes (se for dir, será 0)
+    char ehDiretorio;       // 'D' se é um diretório e 'A' se é um arquivo
+    time_t tempoCriado;     // Instante criado
+    time_t tempoModificado; // Última modificação no arquivo
+    time_t tempoAcesso;     // Tempo de último acesso ao arquivo
+    int numPrimeiroBloco;   // Número do bloco cabeça do arquivo
+    Diretorio *pai;         // Ponteiro para o diretório pai
+
+    // Função que atualiza os tempos (criado, modificado, acesso) baseado numa
+    // bit mask onde 001 é criado, 010 é modificado e 100 é acesso.
+    // Ou seja, se passarmos o valor 5, então atualizaremos o tempo criado e de
+    // acesso para o tempo atual. Se passarmos 7, atualizaremos tudo, se
+    // passarmos qualquer valor maior que 7 ou menor que 1, não faremos nada.
+    void atualizaTempo(int);
 };
 
 class ArquivoGenerico : public Escrevivel {
@@ -46,15 +61,8 @@ class ArquivoGenerico : public Escrevivel {
     const int TAM_NOME = 255;
     /* TODO: Fazer algo pra limitar o nome <23-11-20, Lucas> */
 
-
   public:
-    string nome;            // Nome do arquivo
-    time_t tempoCriado;     // Instante criado
-    time_t tempoModificado; // Última modificação no arquivo
-    time_t tempoAcesso;     // Tempo de último acesso ao arquivo
-    // Para as três variáveis acima, é preciso converter usando uma função para
-    // obtermos a data exata (ctime).
-    int numPrimeiroBloco; // Ponteiro para o bloco cabeça do arquivo
+    ArquivoInfo *informacoes;
 
     void carrega(int);
     void salva();
@@ -72,33 +80,34 @@ class Arquivo : public ArquivoGenerico {
     void salva();
 };
 
-class ArquivoInfo {
-  public:
-    int ptNome;             // Ponteiro para o nome no heap
-    string nome;            // O nome do arquivo
-    int tamanho;            // Tamanho em bytes (se for dir, será 0)
-    char ehDiretorio;       // 'D' se é um diretório e 'A' se é um arquivo
-    time_t tempoCriado;     // Instante criado
-    time_t tempoModificado; // Última modificação no arquivo
-    time_t tempoAcesso;     // Tempo de último acesso ao arquivo
-    int numPrimeiroBloco;   // Ponteiro para o bloco cabeça do arquivo
-};
-
 class Diretorio : public ArquivoGenerico {
   public:
     // A quantidade atual de diretórios criados
     static int qntDiretorios;
 
-    vector<ArquivoInfo> subArquivo;
-    // O diretório aponta para o endereço do bloco dos subdiretório
+    vector<ArquivoInfo> subArquivoInfo;
+    vector<Diretorio *> subDiretorio;
+    vector<Arquivo *> subArquivo;
+
     string heap; // Heap com os nomes de cada arquivo
 
+    virtual void carrega(int);
+    virtual void salva();
+    ArquivoGenerico *busca(string);
+};
+
+class Root : public Diretorio {
+  public:
+    ArquivoInfo informacoes;
+    void inicializa();
     void carrega(int);
     void salva();
 };
 
 class FAT_t : public Escrevivel {
   public:
+    void inicializa();
+
     int ponteiro[TAM_FAT];
 
     void carrega(int);
@@ -109,7 +118,9 @@ class FAT_t : public Escrevivel {
 
 class Bitmap_t : public Escrevivel {
   public:
-    bool cheio[TAM_BITMAP]; // True -> Vazio | False -> Cheio
+    void inicializa();
+
+    bool livre[TAM_BITMAP]; // True -> Vazio | False -> Cheio
 
     void carrega(int);
     void salva();
@@ -133,6 +144,7 @@ extern string nomeArquivo;
 
 extern FAT_t FAT;
 extern Bitmap_t Bitmap;
+extern Root root;
 
 // Pega as mudanças realizadas até agora e atualiza o disco
 void atualizaDisco();
@@ -143,5 +155,7 @@ int enderecoEmBloco(int);
 int blocoEmBaseLimite(int, int &, int &);
 
 string intParaString(int, int);
+
+ArquivoGenerico* caminhoParaArquivo(string caminho);
 
 #endif
