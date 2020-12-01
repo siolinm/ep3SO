@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <exception>
 #include <fstream>
+#include <iomanip>
 #include <queue>
 #include <string>
 #include <vector>
@@ -47,6 +48,13 @@ void ArquivoInfo::atualizaTempo(int bitmask) {
     bitmask = bitmask >> 1;
     if (bitmask & 1) tempoAcesso = tempoAtual;
     bitmask = bitmask >> 1;
+}
+
+void ArquivoInfo::imprimeInfos() {
+    cout << ehDiretorio << " ";
+    cout << setw(5) << ((ehDiretorio == 'D') ? "-" : to_string(tamanho)) << " ";
+    cout <<
+    cout << nome << endl;
 }
 
 ArquivoGenerico *caminhoParaArquivo(string caminho) {
@@ -619,7 +627,7 @@ void Root::salva() {
 }
 
 void FAT_t::inicializa() {
-    for (int i = 0; i < TAM_FAT; i++) ponteiro[i] = BLOCO_NULO;
+    for (int i = 0; i < NUM_BLOCOS; i++) ponteiro[i] = BLOCO_NULO;
 }
 
 void FAT_t::carrega(int numBloco) {
@@ -640,7 +648,8 @@ void FAT_t::salva() {
         aux = intParaString(ponteiro[j], TAM_BLOCO);
         for (int k = 0; k < TAM_BLOCO; k++, ende++) discoAtual[ende] = aux[k];
     }
-    cout << "FAT: ende final = " << ende-1 << endl;
+    for (; ende < TAM_BITMAP + TAM_FAT; ende++) discoAtual[ende] = CHAR_NULO;
+    cout << "FAT: ende final = " << ende - 1 << endl;
 }
 
 int FAT_t::alocaBloco(int numPrimeiroBloco) {
@@ -664,30 +673,33 @@ int FAT_t::alocaBloco(int numPrimeiroBloco) {
 }
 
 void Bitmap_t::inicializa() {
-    for (int i = 0; i < TAM_BITMAP; i++) livre[i] = true;
+    for (int i = 0; i < NUM_BLOCOS; i++) livre[i] = true;
 }
 
 void Bitmap_t::carrega(int numBloco) {
     blocosLivres = 0;
-    for (int i = 0; i < TAM_BITMAP; i++) {
+    for (int i = 0; i < NUM_BLOCOS; i++) {
         livre[i] = (bool) discoAtual[i] - '0';
         if (livre[i]) blocosLivres++;
     }
 }
 
 void Bitmap_t::salva() {
+    int ende = 0;
     cout << "Bitmap: ende inicial = 0" << endl;
-    for (int i = 0; i < TAM_BITMAP; i++) discoAtual[i] = (char) livre[i] + '0';
+    for (ende = 0; ende < NUM_BLOCOS; ende++)
+        discoAtual[ende] = (char) livre[ende] + '0';
+    for (; ende < TAM_BITMAP; ende++) discoAtual[ende] = CHAR_NULO;
     cout << "Bitmap: ende final = " << TAM_BITMAP - 1 << endl;
 }
 
 int Bitmap_t::pegaProxLivre() {
     int blocoInicial = proxLivre - 1;
-    if (blocoInicial < 0) blocoInicial += TAM_BITMAP;
+    if (blocoInicial < 0) blocoInicial += NUM_BLOCOS;
 
     while (livre[proxLivre] == false && proxLivre != blocoInicial) {
         proxLivre++;
-        proxLivre %= TAM_BITMAP;
+        proxLivre %= NUM_BLOCOS;
     }
 
     if (proxLivre == blocoInicial) throw "O disco está cheio.";

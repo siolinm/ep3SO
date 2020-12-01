@@ -12,10 +12,10 @@ using namespace std;
 
 #define TAM_MAX_ARQ 100000000
 #define UNI_ALOCACAO 4000
-#define NUM_BLOCOS TAM_MAX_ARQ / (UNI_ALOCACAO + 6)
+#define NUM_BLOCOS 24961
 #define TAM_BLOCO 5
-#define TAM_BITMAP NUM_BLOCOS
-#define TAM_FAT TAM_BLOCO *NUM_BLOCOS
+#define TAM_BITMAP 28000
+#define TAM_FAT 128000
 #define TAM_ENDERECO 8
 
 #define BLOCO_NULO -1
@@ -52,6 +52,8 @@ class ArquivoInfo {
     // acesso para o tempo atual. Se passarmos 7, atualizaremos tudo, se
     // passarmos qualquer valor maior que 7 ou menor que 1, não faremos nada.
     void atualizaTempo(int);
+
+    void imprimeInfos();
 };
 
 class ArquivoGenerico : public Escrevivel {
@@ -108,7 +110,7 @@ class FAT_t : public Escrevivel {
   public:
     void inicializa();
 
-    int ponteiro[TAM_FAT];
+    int ponteiro[NUM_BLOCOS];
 
     void carrega(int);
     void salva();
@@ -120,7 +122,7 @@ class Bitmap_t : public Escrevivel {
   public:
     void inicializa();
 
-    bool livre[TAM_BITMAP]; // True -> Vazio | False -> Cheio
+    bool livre[NUM_BLOCOS]; // True -> Vazio | False -> Cheio
 
     void carrega(int);
     void salva();

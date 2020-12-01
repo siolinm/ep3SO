@@ -15,11 +15,11 @@ void mount() {
         string aux(TAM_MAX_ARQ, CHAR_NULO);
         discoAtual = aux;
 
-        FAT.inicializa();
         Bitmap.inicializa();
+        FAT.inicializa();
         root.inicializa();
-        FAT.salva();
         Bitmap.salva();
+        FAT.salva();
         root.salva();
 
         arqTmp << discoAtual;
