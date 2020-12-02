@@ -49,6 +49,10 @@ class ArquivoInfo {
     int numPrimeiroBloco;   // Número do bloco cabeça do arquivo
     Diretorio *pai;         // Ponteiro para o diretório pai
 
+    ArquivoInfo();
+    ArquivoInfo(string);
+    ArquivoInfo(string, int);
+
     // Função que atualiza os tempos (criado, modificado, acesso) baseado numa
     // bit mask onde 001 é criado, 010 é modificado e 100 é acesso.
     // Ou seja, se passarmos o valor 5, então atualizaremos o tempo criado e de
@@ -69,16 +73,20 @@ class ArquivoGenerico : public Escrevivel {
   public:
     ArquivoInfo *informacoes;
 
-    void carrega(int);
-    void salva();
+    ArquivoGenerico();
+    ArquivoGenerico(string);
+    ArquivoGenerico(string, int);
+
+    virtual void carrega(int);
+    virtual void salva();
 };
 
 class Arquivo : public ArquivoGenerico {
   public:
-    // A quantidade atual de arquivos regulares criados
-    static int qntArquivos;
+    Arquivo();
+    Arquivo(string);
+    Arquivo(string, int);
 
-    int tamanho;     // Tamanho em bytes
     string conteudo; // Conteúdo do arquivo
 
     void carrega(int);
@@ -87,17 +95,18 @@ class Arquivo : public ArquivoGenerico {
 
 class Diretorio : public ArquivoGenerico {
   public:
-    // A quantidade atual de diretórios criados
-    static int qntDiretorios;
-
-    vector<ArquivoInfo> subArquivoInfo;
+    vector<ArquivoInfo *> subArquivoInfo;
     vector<Diretorio *> subDiretorio;
     vector<Arquivo *> subArquivo;
 
-    string heap; // Heap com os nomes de cada arquivo
+    Diretorio();
+    Diretorio(string);
+    Diretorio(string, int);
 
     virtual void carrega(int);
     virtual void salva();
+    void adiciona(Arquivo *);
+    void adiciona(Diretorio *);
     ArquivoGenerico *busca(string);
     bool buscaAbaixo(string, string);
 };
@@ -120,6 +129,7 @@ class FAT_t : public Escrevivel {
     void salva();
     void liberaBlocos(int);
 
+    int alocaBloco();
     int alocaBloco(int);
 };
 
@@ -166,6 +176,12 @@ string intParaString(int, int);
 string intParaMes(int inteiro);
 string bytesFormatados(int tamanhoBytes);
 
-ArquivoGenerico* caminhoParaArquivo(string caminho);
+ArquivoGenerico *caminhoParaArquivo(string caminho);
+
+// A quantidade atual de arquivos regulares criados
+extern int qntArquivos;
+
+// A quantidade atual de diretórios criados
+extern int qntDiretorios;
 
 #endif

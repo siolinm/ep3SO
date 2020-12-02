@@ -10,20 +10,22 @@
 - [x] Consertar o bitmap e a fat;
 - [ ] Implementar os demais comandos:
     - [x] mount
-    - [ ] cp 
+    - [ ] cp
     - [ ] mkdir
     - [ ] rmdir
     - [ ] cat
     - [ ] touch
     - [ ] rm
-    - [ ] ls
-    - [ ] find
+    - [x] ls
+    - [x] find
     - [ ] df
     - [x] umount
     - [x] sai
 
-- Diretorio
-    - subdir
-      - arquivo
-    - subdir2
-      - arquivo
+Tarefas se sobrar tempo:
+    - [ ] usar a bib gnu history
+
+Erros encontrados:
+    - [x] diretório dentro de diretório
+    - [x] bitmap não alocando
+    - [ ] carrega não está funcionando (só carrega a root)

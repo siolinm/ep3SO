@@ -1,10 +1,9 @@
 #include "commands.hpp"
 
-#include<iomanip>
 #include <algorithm>
 #include <fstream>
+#include <iomanip>
 #include <sstream>
-
 
 void mount() {
     cin >> nomeArquivo;
@@ -36,7 +35,6 @@ void mount() {
 
     // Criamos a árvore de arquivos na memória principal
     root.carrega(0);
-    root.informacoes.imprimeInfos();
 }
 
 void cp() {
@@ -49,32 +47,29 @@ void cp() {
 void mkdir() {
     string diretorio, nomeDir;
     cin >> diretorio;
-    
+
     nomeDir = "";
 
-    if(diretorio.back() == '/')
-        diretorio.pop_back();
+    if (diretorio.back() == '/') diretorio.pop_back();
 
-    while(diretorio.back() != '/'){
+    while (diretorio.back() != '/') {
         nomeDir.push_back(diretorio.back());
         diretorio.pop_back();
     }
 
-    diretorio.pop_back();
+    if (diretorio.size() != 1)
+        diretorio.pop_back();
 
     reverse(nomeDir.begin(), nomeDir.end());
 
-    Diretorio * dirPai = (Diretorio *)caminhoParaArquivo(diretorio);
-    if(dirPai != nullptr){
-        Diretorio * novo = new Diretorio();
+    Diretorio *dirPai = (Diretorio *) caminhoParaArquivo(diretorio);
+    if (dirPai != nullptr) {
+        Diretorio *novo = new Diretorio(nomeDir, 0);
+        novo->informacoes->pai = dirPai;
         dirPai->adiciona(novo);
-    }
-    else{
+    } else {
         cout << "Caminho inexistente" << endl;
     }
-    // "/marcos/lucas/davi/novodir"
-
-    // cout << diretorio << "\n";
 }
 
 void rmdir() {
@@ -109,33 +104,38 @@ void ls() {
     string diretorio;
     cin >> diretorio;
 
-    Diretorio * dir = (Diretorio *)caminhoParaArquivo(diretorio);
+    Diretorio *dir = (Diretorio *) caminhoParaArquivo(diretorio);
 
-    cout << " Size Tempo Criado  Tempo Modifi  Tempo Acesso   Name"; 
+    cout << "   Size Tempo Criado  Tempo Modifi  Tempo Acesso   Name";
     cout << endl;
 
-    for (ArquivoInfo & arq : dir->subArquivoInfo)
-        arq.imprimeInfos();    
+    for (ArquivoInfo *arqInfo : dir->subArquivoInfo) arqInfo->imprimeInfos();
 }
 
 void find() {
-    Diretorio * dir;
+    Diretorio *dir;
     string diretorio, arquivo;
 
     cin >> diretorio >> arquivo;
 
-    dir = (Diretorio *)caminhoParaArquivo(diretorio);
-    
-    if(!dir->buscaAbaixo(diretorio, arquivo))
+    dir = (Diretorio *) caminhoParaArquivo(diretorio);
+
+    if (!dir->buscaAbaixo(diretorio, arquivo))
         cout << "Arquivo não encontrado" << endl;
-    
 }
 
 void df() { }
 
 void umount() {
+    // Salvamos toda a árvore de arquivos para a string discoAtual, o fat e
+    // bitmap
+    Bitmap.salva();
+    FAT.salva();
+    root.salva();
+
     ofstream arquivo(nomeArquivo);
     arquivo << discoAtual;
+
     // Free em tudo os bagulho
     arquivo.close();
 }

@@ -15,6 +15,8 @@ FAT_t FAT;
 Bitmap_t Bitmap;
 Root root;
 string nomeArquivo;
+int qntArquivos = 0;
+int qntDiretorios = 0;
 
 int blocoEmEndereco(int numBloco) {
     return TAM_BITMAP + TAM_FAT + numBloco * UNI_ALOCACAO;
@@ -35,22 +37,20 @@ int blocoEmBaseLimite(int numBloco, int &base, int &limite) {
  * void limpaBloco(int numBloco)
  *
  * limpa o conteudo do bloco (coloca CHAR_NULO)
- * 
+ *
  */
-void limpaBloco(int numBloco){
+void limpaBloco(int numBloco) {
     int ende, base, limite;
     ende = blocoEmBaseLimite(numBloco, base, limite);
 
-    for(; ende < limite; ende++)
-        discoAtual[ende] = CHAR_NULO;
+    for (; ende < limite; ende++) discoAtual[ende] = CHAR_NULO;
 }
 
-void limpaBloco(int ende, int numBloco){
+void limpaBloco(int ende, int numBloco) {
     int base, limite;
     blocoEmBaseLimite(numBloco, base, limite);
 
-    for(; ende < limite; ende++)
-        discoAtual[ende] = CHAR_NULO;
+    for (; ende < limite; ende++) discoAtual[ende] = CHAR_NULO;
 }
 
 string intParaString(int inteiro, int tamanho) {
@@ -93,6 +93,33 @@ string bytesFormatados(int tamanhoBytes) {
         return to_string(tamanhoBytes);
 }
 
+ArquivoInfo::ArquivoInfo() {
+    atualizaTempo(T_TODOS);
+    pai = nullptr;
+    tamanho = 0;
+    nome = "";
+    ptNome = 0;
+    ehDiretorio = '0';
+}
+
+ArquivoInfo::ArquivoInfo(string nome) {
+    atualizaTempo(T_TODOS);
+    pai = nullptr;
+    tamanho = 0;
+    this->nome = nome;
+    ptNome = 0;
+    ehDiretorio = '0';
+}
+
+ArquivoInfo::ArquivoInfo(string nome, int tamanho) {
+    atualizaTempo(T_TODOS);
+    pai = nullptr;
+    this->tamanho = tamanho;
+    this->nome = nome;
+    ptNome = 0;
+    ehDiretorio = '0';
+}
+
 void ArquivoInfo::atualizaTempo(int bitmask) {
     if (bitmask < 1 && bitmask > 7) return;
 
@@ -109,14 +136,15 @@ void ArquivoInfo::imprimeInfos() {
     auto imprimeTempo = [](time_t *tempo) {
         struct tm *timeInfo;
         timeInfo = localtime(tempo);
-        cout << setw(2) << timeInfo->tm_mday << " " << intParaMes(timeInfo->tm_mon) << " "
-             << setw(2) << setfill('0') << timeInfo->tm_hour << ":" << setw(2)
-             << setfill('0') << timeInfo->tm_min << "  ";
+        cout << setw(2) << setfill('0') << timeInfo->tm_mday << " "
+             << intParaMes(timeInfo->tm_mon) << " " << setw(2) << setfill('0')
+             << timeInfo->tm_hour << ":" << setw(2) << setfill('0')
+             << timeInfo->tm_min << "  ";
     };
 
     cout << ehDiretorio << " ";
-    cout << setw(5) << ((ehDiretorio == 'D') ? "-" : bytesFormatados(tamanho))
-         << " ";
+    cout << setw(5)
+         << ((ehDiretorio == 'D') ? "-----" : bytesFormatados(tamanho)) << " ";
     // TEMPORARIO: depois deixar apenas o tempo de última modificação
     for (time_t *tempo : { &tempoCriado, &tempoModificado, &tempoAcesso })
         imprimeTempo(tempo);
@@ -124,20 +152,37 @@ void ArquivoInfo::imprimeInfos() {
     cout << nome << endl;
 }
 
+ArquivoGenerico::ArquivoGenerico() { informacoes = nullptr; }
+
+ArquivoGenerico::ArquivoGenerico(string nome) {
+    informacoes = new ArquivoInfo(nome);
+}
+
+ArquivoGenerico::ArquivoGenerico(string nome, int tamanho) {
+    informacoes = new ArquivoInfo(nome, tamanho);
+}
+
 ArquivoGenerico *caminhoParaArquivo(string caminho) {
     Diretorio *atual = &root;
-    ArquivoGenerico * retorn = nullptr;
+    ArquivoGenerico *retorn = nullptr;
 
     int i;
     string nomeAtual;
+
+    if (caminho.size() == 1) {
+        if (caminho[0] == '/')
+            return atual;
+        else
+            throw "Caminho inexistente.";
+    }
 
     i = 1; // ignoramos '/' no começo da string
     if (caminho[(int) caminho.size() - 1] == '/') caminho.pop_back();
 
     while (i < (int) caminho.size()) {
         nomeAtual = "";
-        while (i < (int) caminho.size() && caminho[i++] != '/')
-            nomeAtual.push_back(caminho[i]);
+        while (i < (int) caminho.size() && caminho[i] != '/')
+            nomeAtual.push_back(caminho[i++]);
 
         if (i < (int) caminho.size()) {
             try {
@@ -165,6 +210,30 @@ void ArquivoGenerico::carrega(int numBloco) { }
 
 void ArquivoGenerico::salva() { }
 
+Arquivo::Arquivo() : ArquivoGenerico() {
+    qntArquivos++;
+    conteudo = "";
+}
+
+Arquivo::Arquivo(string nome) : ArquivoGenerico(nome) {
+    qntArquivos++;
+    conteudo = "";
+    informacoes->ehDiretorio = 'A';
+    informacoes->numPrimeiroBloco = FAT.alocaBloco();
+}
+
+Arquivo::Arquivo(string nome, int tamanho) : ArquivoGenerico(nome, tamanho) {
+    qntArquivos++;
+    conteudo = "";
+    informacoes->ehDiretorio = 'A';
+    informacoes->numPrimeiroBloco = FAT.alocaBloco();
+    tamanho -= 4000;
+    while (tamanho > 0) {
+        FAT.alocaBloco(informacoes->numPrimeiroBloco);
+        tamanho -= 4000;
+    }
+}
+
 void Arquivo::carrega(int numBloco) {
     // Base e limite para o bloco que estamos atualmente carregando
     int base, limite;
@@ -178,6 +247,7 @@ void Arquivo::carrega(int numBloco) {
     // };
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
+    cout << "Carregando arquivo do endereço " << ende << endl;
 
     ende += 2; // Pular o '\\' e o 'A'
 
@@ -219,6 +289,8 @@ void Arquivo::salva() {
     // };
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
+    cout << "Salvando o arquivo " << informacoes->nome << " na posição " << ende
+         << endl;
 
     discoAtual[ende++] = '\\';
 
@@ -252,6 +324,21 @@ void Arquivo::salva() {
     }
 }
 
+Diretorio::Diretorio() : ArquivoGenerico() { qntDiretorios++; }
+
+Diretorio::Diretorio(string nome) : ArquivoGenerico(nome) {
+    qntDiretorios++;
+    informacoes->ehDiretorio = 'D';
+    informacoes->numPrimeiroBloco = FAT.alocaBloco();
+}
+
+Diretorio::Diretorio(string nome, int tamanho)
+    : ArquivoGenerico(nome, tamanho) {
+    qntDiretorios++;
+    informacoes->ehDiretorio = 'D';
+    informacoes->numPrimeiroBloco = FAT.alocaBloco();
+}
+
 void Diretorio::carrega(int numBloco) {
     int base, limite;
     int ende; // Endereço atual sendo lido
@@ -271,6 +358,7 @@ void Diretorio::carrega(int numBloco) {
     };
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
+    cout << "Carregando diretório do endereço " << ende << endl;
 
     ende += 2; // Pular o '\\' e 'D'
 
@@ -284,18 +372,21 @@ void Diretorio::carrega(int numBloco) {
     // nome = aux;
 
     // Pegar as entradas de arquivo
-    for (ArquivoInfo &subArqInfo : subArquivoInfo) {
+    while (discoAtual[ende] != '|') {
+        ArquivoInfo *subArqInfo = new ArquivoInfo();
+        subArquivoInfo.push_back(subArqInfo);
+
         // Pegar o ponteiro para o nome na heap
         string aux = "";
         for (int i = 0; i < TAM_ENDERECO; i++, ende++) {
             pulaBloco();
             aux.push_back(discoAtual[ende]);
         }
-        subArqInfo.ptNome = stoi(aux);
+        subArqInfo->ptNome = stoi(aux);
 
         // Pegar a flag de arquivo ou diretório
         pulaBloco();
-        subArqInfo.ehDiretorio = discoAtual[ende++];
+        subArqInfo->ehDiretorio = discoAtual[ende++];
 
         // Pegar o número do primeiro bloco
         aux = "";
@@ -303,24 +394,24 @@ void Diretorio::carrega(int numBloco) {
             pulaBloco();
             aux.push_back(discoAtual[ende]);
         }
-        subArqInfo.numPrimeiroBloco = stoi(aux);
+        subArqInfo->numPrimeiroBloco = stoi(aux);
 
-        if (subArqInfo.ehDiretorio == 'D') {
+        if (subArqInfo->ehDiretorio == 'D') {
             Diretorio *subDir = new Diretorio();
-            subDir->carrega(subArqInfo.numPrimeiroBloco);
-            subDir->informacoes = &subArqInfo;
+            subDir->carrega(subArqInfo->numPrimeiroBloco);
+            subDir->informacoes = subArqInfo;
             subDiretorio.push_back(subDir);
         } else {
             Arquivo *subArq = new Arquivo();
-            subArq->carrega(subArqInfo.numPrimeiroBloco);
-            subArq->informacoes = &subArqInfo;
+            subArq->carrega(subArqInfo->numPrimeiroBloco);
+            subArq->informacoes = subArqInfo;
             subArquivo.push_back(subArq);
         }
 
         // Pegar os tempos
         for (time_t *tempo :
-             { &subArqInfo.tempoCriado, &subArqInfo.tempoModificado,
-               &subArqInfo.tempoAcesso })
+             { &subArqInfo->tempoCriado, &subArqInfo->tempoModificado,
+               &subArqInfo->tempoAcesso })
             *tempo = pegaTempo(TAM_TEMPO);
 
         // Pegar o tamanho do arquivo (ou zeros se for diretório)
@@ -329,18 +420,18 @@ void Diretorio::carrega(int numBloco) {
             pulaBloco();
             aux.push_back(discoAtual[ende]);
         }
-        subArqInfo.tamanho = stoi(aux);
+        subArqInfo->tamanho = stoi(aux);
 
         // Pegar o nome na heap
-        int enderecoPonteiro = subArqInfo.ptNome;
+        int enderecoPonteiro = subArqInfo->ptNome;
         aux = "";
         pulaBloco();
         for (; discoAtual[enderecoPonteiro] != '|';
              enderecoPonteiro++, pulaBloco())
             aux.push_back(discoAtual[enderecoPonteiro]);
-        subArqInfo.nome = stoi(aux);
+        subArqInfo->nome = stoi(aux);
 
-        subArqInfo.pai = this;
+        subArqInfo->pai = this;
     }
 
     auto porNome = [](ArquivoGenerico *a1, ArquivoGenerico *a2) {
@@ -378,6 +469,8 @@ void Diretorio::salva() {
     };
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
+    cout << "Salvando o dir " << informacoes->nome << " na posição " << ende
+         << endl;
 
     discoAtual[ende++] = '\\';
     discoAtual[ende++] = 'D';
@@ -393,43 +486,46 @@ void Diretorio::salva() {
 
     // Escrever as entradas de arquivo
     queue<int> fila;
-    for (ArquivoInfo &subArqInfo : subArquivoInfo) {
+    for (ArquivoInfo *subArqInfo : subArquivoInfo) {
         // Escrever o ponteiro para o nome na heap
         alocaaux();
         fila.push(ende);
         for (int i = 0; i < TAM_ENDERECO; i++, ende++) {
             alocaaux();
-            discoAtual[ende] = '0';
+            discoAtual[ende] = CHAR_NULO;
         }
 
         // A flag de arquivo ou diretório
         alocaaux();
-        discoAtual[ende++] = (subArqInfo.ehDiretorio);
+        discoAtual[ende++] = (subArqInfo->ehDiretorio);
 
         // Escrever o número do primeiro bloco
-        string aux = intParaString(subArqInfo.numPrimeiroBloco, NUM_BLOCOS);
-        for (int i = 0; i < NUM_BLOCOS; i++, ende++) {
+        string aux = intParaString(subArqInfo->numPrimeiroBloco, TAM_BLOCO);
+        for (int i = 0; i < TAM_BLOCO; i++, ende++) {
             alocaaux();
             discoAtual[ende] = aux[i];
         }
 
         // Escrever os tempos
         for (time_t tempo :
-             { subArqInfo.tempoCriado, subArqInfo.tempoModificado,
-               subArqInfo.tempoAcesso })
+             { subArqInfo->tempoCriado, subArqInfo->tempoModificado,
+               subArqInfo->tempoAcesso })
             escreveTempo(tempo);
 
         // Escrever o tamanho do arquivo (ou zeros se for diretório)
-        aux = intParaString(subArqInfo.tamanho, TAM_TAMANHO);
+        aux = intParaString(subArqInfo->tamanho, TAM_TAMANHO);
         for (int i = 0; i < TAM_TAMANHO; i++, ende++) {
             alocaaux();
             discoAtual[ende] = aux[i];
         }
     }
 
+    alocaaux();
+    discoAtual[ende++] = '|'; // para indicar o começo da heap
+
     // Escrever a heap
     int enderecoPonteiro;
-    for (ArquivoInfo &subArqInfo : subArquivoInfo) {
+    for (ArquivoInfo *subArqInfo : subArquivoInfo) {
         enderecoPonteiro = fila.front();
         fila.pop();
 
@@ -444,13 +540,42 @@ void Diretorio::salva() {
         }
 
         // Escrevo o nome na heap
-        for (int i = 0; i < (int) subArqInfo.nome.size(); i++, ende++) {
+        for (int i = 0; i < (int) subArqInfo->nome.size(); i++, ende++) {
             alocaaux();
-            discoAtual[ende] = subArqInfo.nome[i];
+            discoAtual[ende] = subArqInfo->nome[i];
         }
         alocaaux();
         discoAtual[ende++] = '|';
     }
+
+    for (Diretorio *subDir : subDiretorio) subDir->salva();
+    for (Arquivo *subArq : subArquivo) subArq->salva();
+}
+
+void Diretorio::adiciona(Diretorio *dir) {
+    auto porNome = [](ArquivoGenerico *arq, string nome) {
+        return arq->informacoes->nome < nome;
+    };
+
+    subArquivoInfo.push_back(dir->informacoes);
+
+    auto iterDir = lower_bound(subDiretorio.begin(), subDiretorio.end(),
+                               dir->informacoes->nome, porNome);
+
+    subDiretorio.insert(iterDir, dir);
+}
+
+void Diretorio::adiciona(Arquivo *arq) {
+    auto porNome = [](ArquivoGenerico *arq, string nome) {
+        return arq->informacoes->nome < nome;
+    };
+
+    subArquivoInfo.push_back(arq->informacoes);
+
+    auto iterDir = lower_bound(subArquivo.begin(), subArquivo.end(),
+                               arq->informacoes->nome, porNome);
+
+    subArquivo.insert(iterDir, arq);
 }
 
 ArquivoGenerico *Diretorio::busca(string nomeArquivo) {
@@ -475,19 +600,20 @@ ArquivoGenerico *Diretorio::busca(string nomeArquivo) {
     return *iterDir;
 }
 
-bool Diretorio::buscaAbaixo(string caminho, string nomeAtual){
+bool Diretorio::buscaAbaixo(string caminho, string nomeAtual) {
     bool retorno = false;
 
-    try{
-        ArquivoGenerico * arq = busca(nomeAtual);
+    try {
+        ArquivoGenerico *arq = busca(nomeAtual);
         cout << caminho << "/" << arq->informacoes->nome << endl;
         retorno = true;
-    }
-    catch(string erro) { }
+    } catch (string erro) { }
 
-    for(Diretorio * dir : subDiretorio)
-        retorno = retorno || dir->buscaAbaixo(caminho + "/" + 
-        dir->informacoes->nome, nomeAtual);
+    for (Diretorio *dir : subDiretorio)
+        retorno =
+            retorno ||
+            dir->buscaAbaixo(caminho + "/" + dir->informacoes->nome, nomeAtual);
+    return retorno;
 }
 
 void Root::inicializa() {
@@ -498,6 +624,9 @@ void Root::inicializa() {
     informacoes.pai = nullptr;
     informacoes.tamanho = 0;
     informacoes.numPrimeiroBloco = 0;
+    Bitmap.livre[0] = OCUPADO;
+    Bitmap.blocosLivres--;
+    FAT.ponteiro[0] = BLOCO_NULO;
 }
 
 void Root::carrega(int numBloco) {
@@ -520,6 +649,7 @@ void Root::carrega(int numBloco) {
     };
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
+    cout << "carregando root do endere" << ende << endl;
 
     ende += 2; // Pular o '\\' e 'D'
 
@@ -534,19 +664,21 @@ void Root::carrega(int numBloco) {
     while (discoAtual[ende] != '|') aux.push_back(discoAtual[ende++]);
     informacoes.nome = aux;
 
-    // Pegar as entradas de arquivo
-    for (ArquivoInfo &subArqInfo : subArquivoInfo) {
+    while (discoAtual[ende] != '|') {
+        ArquivoInfo *subArqInfo = new ArquivoInfo();
+        subArquivoInfo.push_back(subArqInfo);
+
         // Pegar o ponteiro para o nome na heap
         string aux = "";
         for (int i = 0; i < TAM_ENDERECO; i++, ende++) {
             pulaBloco();
             aux.push_back(discoAtual[ende]);
         }
-        subArqInfo.ptNome = stoi(aux);
+        subArqInfo->ptNome = stoi(aux);
 
         // Pegar a flag de arquivo ou diretório
         pulaBloco();
-        subArqInfo.ehDiretorio = discoAtual[ende++];
+        subArqInfo->ehDiretorio = discoAtual[ende++];
 
         // Pegar o número do primeiro bloco
         aux = "";
@@ -554,24 +686,24 @@ void Root::carrega(int numBloco) {
             pulaBloco();
             aux.push_back(discoAtual[ende]);
         }
-        subArqInfo.numPrimeiroBloco = stoi(aux);
+        subArqInfo->numPrimeiroBloco = stoi(aux);
 
-        if (subArqInfo.ehDiretorio == 'D') {
+        if (subArqInfo->ehDiretorio == 'D') {
             Diretorio *subDir = new Diretorio();
-            subDir->carrega(subArqInfo.numPrimeiroBloco);
-            subDir->informacoes = &subArqInfo;
+            subDir->carrega(subArqInfo->numPrimeiroBloco);
+            subDir->informacoes = subArqInfo;
             subDiretorio.push_back(subDir);
         } else {
             Arquivo *subArq = new Arquivo();
-            subArq->carrega(subArqInfo.numPrimeiroBloco);
-            subArq->informacoes = &subArqInfo;
+            subArq->carrega(subArqInfo->numPrimeiroBloco);
+            subArq->informacoes = subArqInfo;
             subArquivo.push_back(subArq);
         }
 
         // Pegar os tempos
         for (time_t *tempo :
-             { &subArqInfo.tempoCriado, &subArqInfo.tempoModificado,
-               &subArqInfo.tempoAcesso })
+             { &subArqInfo->tempoCriado, &subArqInfo->tempoModificado,
+               &subArqInfo->tempoAcesso })
             *tempo = pegaTempo(TAM_TEMPO);
 
         // Pegar o tamanho do arquivo (ou zeros se for diretório)
@@ -580,18 +712,18 @@ void Root::carrega(int numBloco) {
             pulaBloco();
             aux.push_back(discoAtual[ende]);
         }
-        subArqInfo.tamanho = stoi(aux);
+        subArqInfo->tamanho = stoi(aux);
 
         // Pegar o nome na heap
-        int enderecoPonteiro = subArqInfo.ptNome;
+        int enderecoPonteiro = subArqInfo->ptNome;
         aux = "";
         pulaBloco();
         for (; discoAtual[enderecoPonteiro] != '|';
              enderecoPonteiro++, pulaBloco())
             aux.push_back(discoAtual[enderecoPonteiro]);
-        subArqInfo.nome = stoi(aux);
+        subArqInfo->nome = stoi(aux);
 
-        subArqInfo.pai = this;
+        subArqInfo->pai = this;
     }
 
     auto porNome = [](ArquivoGenerico *a1, ArquivoGenerico *a2) {
@@ -647,43 +779,46 @@ void Root::salva() {
 
     // Escrever as entradas de arquivo
     queue<int> fila;
-    for (ArquivoInfo &subArqInfo : subArquivoInfo) {
+    for (ArquivoInfo *subArqInfo : subArquivoInfo) {
         // Escrever o ponteiro para o nome na heap
         alocaaux();
         fila.push(ende);
         for (int i = 0; i < TAM_ENDERECO; i++, ende++) {
             alocaaux();
-            discoAtual[ende] = '0';
+            discoAtual[ende] = CHAR_NULO;
         }
 
         // A flag de arquivo ou diretório
         alocaaux();
-        discoAtual[ende++] = (subArqInfo.ehDiretorio);
+        discoAtual[ende++] = (subArqInfo->ehDiretorio);
 
         // Escrever o número do primeiro bloco
-        string aux = intParaString(subArqInfo.numPrimeiroBloco, NUM_BLOCOS);
-        for (int i = 0; i < NUM_BLOCOS; i++, ende++) {
+        string aux = intParaString(subArqInfo->numPrimeiroBloco, TAM_BLOCO);
+        for (int i = 0; i < TAM_BLOCO; i++, ende++) {
             alocaaux();
             discoAtual[ende] = aux[i];
         }
 
         // Escrever os tempos
         for (time_t tempo :
-             { subArqInfo.tempoCriado, subArqInfo.tempoModificado,
-               subArqInfo.tempoAcesso })
+             { subArqInfo->tempoCriado, subArqInfo->tempoModificado,
+               subArqInfo->tempoAcesso })
             escreveTempo(tempo);
 
         // Escrever o tamanho do arquivo (ou zeros se for diretório)
-        aux = intParaString(subArqInfo.tamanho, TAM_TAMANHO);
+        aux = intParaString(subArqInfo->tamanho, TAM_TAMANHO);
         for (int i = 0; i < TAM_TAMANHO; i++, ende++) {
             alocaaux();
             discoAtual[ende] = aux[i];
         }
     }
 
+    alocaaux();
+    discoAtual[ende++] = '|'; // para indicar o começo da heap
+
     // Escrever a heap
     int enderecoPonteiro;
-    for (ArquivoInfo &subArqInfo : subArquivoInfo) {
+    for (ArquivoInfo *subArqInfo : subArquivoInfo) {
         enderecoPonteiro = fila.front();
         fila.pop();
 
@@ -698,15 +833,18 @@ void Root::salva() {
         }
 
         // Escrevo o nome na heap
-        for (int i = 0; i < (int) subArqInfo.nome.size(); i++, ende++) {
+        for (int i = 0; i < (int) subArqInfo->nome.size(); i++, ende++) {
             alocaaux();
-            discoAtual[ende] = subArqInfo.nome[i];
+            discoAtual[ende] = subArqInfo->nome[i];
         }
         alocaaux();
         discoAtual[ende++] = '|';
     }
 
     cout << "Root: ende final = " << ende << endl;
+
+    for (Diretorio *subDir : subDiretorio) subDir->salva();
+    for (Arquivo *subArq : subArquivo) subArq->salva();
 }
 
 void FAT_t::inicializa() {
@@ -735,6 +873,23 @@ void FAT_t::salva() {
     cout << "FAT: ende final = " << ende - 1 << endl;
 }
 
+int FAT_t::alocaBloco() {
+    try {
+        int blocoLivre = Bitmap.pegaProxLivre();
+        cout << "bloco livre = " << blocoLivre << endl;
+
+        Bitmap.livre[blocoLivre] = OCUPADO;
+        Bitmap.blocosLivres--;
+        ponteiro[blocoLivre] = BLOCO_NULO;
+
+        return blocoLivre;
+    } catch (string erro) {
+        cerr << "Erro ao alocar um bloco de memória:\n" << erro << endl;
+        return -1;
+    }
+    return -1;
+}
+
 int FAT_t::alocaBloco(int numPrimeiroBloco) {
     try {
         int bloco_livre = Bitmap.pegaProxLivre();
@@ -743,7 +898,7 @@ int FAT_t::alocaBloco(int numPrimeiroBloco) {
             numPrimeiroBloco = ponteiro[numPrimeiroBloco];
 
         ponteiro[numPrimeiroBloco] = bloco_livre;
-        Bitmap.livre[bloco_livre] = false;
+        Bitmap.livre[bloco_livre] = OCUPADO;
         Bitmap.blocosLivres--;
         ponteiro[bloco_livre] = BLOCO_NULO;
 
@@ -755,13 +910,12 @@ int FAT_t::alocaBloco(int numPrimeiroBloco) {
     return -1;
 }
 
-void FAT_t::liberaBlocos(int numBloco){
+void FAT_t::liberaBlocos(int numBloco) {
     int prox;
 
-    while(numBloco != BLOCO_NULO){
-
+    while (numBloco != BLOCO_NULO) {
         prox = FAT.ponteiro[numBloco];
-        Bitmap.livre[numBloco] = LIVRE; 
+        Bitmap.livre[numBloco] = LIVRE;
         FAT.ponteiro[numBloco] = BLOCO_NULO;
 
         limpaBloco(numBloco);
@@ -771,6 +925,8 @@ void FAT_t::liberaBlocos(int numBloco){
 
 void Bitmap_t::inicializa() {
     for (int i = 0; i < NUM_BLOCOS; i++) livre[i] = LIVRE;
+    proxLivre = 0;
+    blocosLivres = NUM_BLOCOS;
 }
 
 void Bitmap_t::carrega(int numBloco) {
