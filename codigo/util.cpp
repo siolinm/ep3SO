@@ -17,18 +17,40 @@ Root root;
 string nomeArquivo;
 
 int blocoEmEndereco(int numBloco) {
-    return TAM_BITMAP + TAM_FAT + numBloco * 4000;
+    return TAM_BITMAP + TAM_FAT + numBloco * UNI_ALOCACAO;
 }
 
 int enderecoEmBloco(int endereco) {
-    return (endereco - TAM_BITMAP - TAM_FAT) / 4000;
+    return (endereco - TAM_BITMAP - TAM_FAT) / UNI_ALOCACAO;
 }
 
 int blocoEmBaseLimite(int numBloco, int &base, int &limite) {
     int end = blocoEmEndereco(numBloco);
     base = end;
-    limite = end + 4000;
+    limite = end + UNI_ALOCACAO;
     return end;
+}
+
+/*
+ * void limpaBloco(int numBloco)
+ *
+ * limpa o conteudo do bloco (coloca CHAR_NULO)
+ * 
+ */
+void limpaBloco(int numBloco){
+    int ende, base, limite;
+    ende = blocoEmBaseLimite(numBloco, base, limite);
+
+    for(; ende < limite; ende++)
+        discoAtual[ende] = CHAR_NULO;
+}
+
+void limpaBloco(int ende, int numBloco){
+    int base, limite;
+    blocoEmBaseLimite(numBloco, base, limite);
+
+    for(; ende < limite; ende++)
+        discoAtual[ende] = CHAR_NULO;
 }
 
 string intParaString(int inteiro, int tamanho) {
@@ -87,9 +109,9 @@ void ArquivoInfo::imprimeInfos() {
     auto imprimeTempo = [](time_t *tempo) {
         struct tm *timeInfo;
         timeInfo = localtime(tempo);
-        cout << timeInfo->tm_mday << " " << intParaMes(timeInfo->tm_mon) << " "
+        cout << setw(2) << timeInfo->tm_mday << " " << intParaMes(timeInfo->tm_mon) << " "
              << setw(2) << setfill('0') << timeInfo->tm_hour << ":" << setw(2)
-             << setfill('0') << timeInfo->tm_min << " ";
+             << setfill('0') << timeInfo->tm_min << "  ";
     };
 
     cout << ehDiretorio << " ";
@@ -104,6 +126,7 @@ void ArquivoInfo::imprimeInfos() {
 
 ArquivoGenerico *caminhoParaArquivo(string caminho) {
     Diretorio *atual = &root;
+    ArquivoGenerico * retorn = nullptr;
 
     int i;
     string nomeAtual;
@@ -128,14 +151,14 @@ ArquivoGenerico *caminhoParaArquivo(string caminho) {
     }
 
     try {
-        atual = (Diretorio *) atual->busca(nomeAtual);
+        retorn = atual->busca(nomeAtual);
     } catch (string exc) {
         cerr << "ERRO: " << exc << endl;
         cerr << "Retornando arquivo nulo!" << endl;
         return nullptr;
     }
 
-    return atual;
+    return retorn;
 }
 
 void ArquivoGenerico::carrega(int numBloco) { }
@@ -452,6 +475,21 @@ ArquivoGenerico *Diretorio::busca(string nomeArquivo) {
     return *iterDir;
 }
 
+bool Diretorio::buscaAbaixo(string caminho, string nomeAtual){
+    bool retorno = false;
+
+    try{
+        ArquivoGenerico * arq = busca(nomeAtual);
+        cout << caminho << "/" << arq->informacoes->nome << endl;
+        retorno = true;
+    }
+    catch(string erro) { }
+
+    for(Diretorio * dir : subDiretorio)
+        retorno = retorno || dir->buscaAbaixo(caminho + "/" + 
+        dir->informacoes->nome, nomeAtual);
+}
+
 void Root::inicializa() {
     informacoes.nome = "/";
     informacoes.atualizaTempo(T_TODOS);
@@ -717,8 +755,22 @@ int FAT_t::alocaBloco(int numPrimeiroBloco) {
     return -1;
 }
 
+void FAT_t::liberaBlocos(int numBloco){
+    int prox;
+
+    while(numBloco != BLOCO_NULO){
+
+        prox = FAT.ponteiro[numBloco];
+        Bitmap.livre[numBloco] = LIVRE; 
+        FAT.ponteiro[numBloco] = BLOCO_NULO;
+
+        limpaBloco(numBloco);
+        numBloco = prox;
+    }
+}
+
 void Bitmap_t::inicializa() {
-    for (int i = 0; i < NUM_BLOCOS; i++) livre[i] = true;
+    for (int i = 0; i < NUM_BLOCOS; i++) livre[i] = LIVRE;
 }
 
 void Bitmap_t::carrega(int numBloco) {

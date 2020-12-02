@@ -21,6 +21,9 @@ using namespace std;
 #define BLOCO_NULO -1
 #define CHAR_NULO ' '
 
+#define LIVRE true
+#define OCUPADO false
+
 #define T_CRIADO 1
 #define T_MODIFICADO 2
 #define T_ACESSO 4
@@ -96,6 +99,7 @@ class Diretorio : public ArquivoGenerico {
     virtual void carrega(int);
     virtual void salva();
     ArquivoGenerico *busca(string);
+    bool buscaAbaixo(string, string);
 };
 
 class Root : public Diretorio {
@@ -114,6 +118,7 @@ class FAT_t : public Escrevivel {
 
     void carrega(int);
     void salva();
+    void liberaBlocos(int);
 
     int alocaBloco(int);
 };

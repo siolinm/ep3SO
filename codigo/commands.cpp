@@ -1,5 +1,7 @@
 #include "commands.hpp"
 
+#include<iomanip>
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 
@@ -45,8 +47,32 @@ void cp() {
 }
 
 void mkdir() {
-    string diretorio;
+    string diretorio, nomeDir;
     cin >> diretorio;
+    
+    nomeDir = "";
+
+    if(diretorio.back() == '/')
+        diretorio.pop_back();
+
+    while(diretorio.back() != '/'){
+        nomeDir.push_back(diretorio.back());
+        diretorio.pop_back();
+    }
+
+    diretorio.pop_back();
+
+    reverse(nomeDir.begin(), nomeDir.end());
+
+    Diretorio * dirPai = (Diretorio *)caminhoParaArquivo(diretorio);
+    if(dirPai != nullptr){
+        Diretorio * novo = new Diretorio();
+        dirPai->adiciona(novo);
+    }
+    else{
+        cout << "Caminho inexistente" << endl;
+    }
+    // "/marcos/lucas/davi/novodir"
 
     // cout << diretorio << "\n";
 }
@@ -83,14 +109,26 @@ void ls() {
     string diretorio;
     cin >> diretorio;
 
-    cout << diretorio << "\n";
+    Diretorio * dir = (Diretorio *)caminhoParaArquivo(diretorio);
+
+    cout << " Size Tempo Criado  Tempo Modifi  Tempo Acesso   Name"; 
+    cout << endl;
+
+    for (ArquivoInfo & arq : dir->subArquivoInfo)
+        arq.imprimeInfos();    
 }
 
 void find() {
+    Diretorio * dir;
     string diretorio, arquivo;
+
     cin >> diretorio >> arquivo;
 
-    cout << diretorio << " " << arquivo << "\n";
+    dir = (Diretorio *)caminhoParaArquivo(diretorio);
+    
+    if(!dir->buscaAbaixo(diretorio, arquivo))
+        cout << "Arquivo não encontrado" << endl;
+    
 }
 
 void df() { }
