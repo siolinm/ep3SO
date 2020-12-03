@@ -93,6 +93,24 @@ string bytesFormatados(int tamanhoBytes) {
         return to_string(tamanhoBytes);
 }
 
+void divideEmArquivoECaminho(string &caminho, string &nome) {
+    nome = "";
+
+    // Caminhos podem ou não ter barra no final, nós ignoramos-a se sim
+    if (caminho.back() == '/') caminho.pop_back();
+
+    while (caminho.back() != '/') {
+        nome.push_back(caminho.back());
+        caminho.pop_back();
+    }
+
+    // Sobrará a barra (e.g. /marcos/lucas/), então tiramos a menos que seja
+    // apenas o diretório '/'.
+    if (caminho.size() != 1) caminho.pop_back();
+
+    reverse(nome.begin(), nome.end());
+}
+
 ArquivoInfo::ArquivoInfo() {
     atualizaTempo(T_TODOS);
     pai = nullptr;
@@ -152,6 +170,8 @@ void ArquivoInfo::imprimeInfos() {
     cout << nome << endl;
 }
 
+ArquivoGenerico::~ArquivoGenerico() { }
+
 ArquivoGenerico::ArquivoGenerico() { informacoes = nullptr; }
 
 ArquivoGenerico::ArquivoGenerico(string nome) {
@@ -173,7 +193,7 @@ ArquivoGenerico *caminhoParaArquivo(string caminho) {
         if (caminho[0] == '/')
             return atual;
         else
-            throw "Caminho inexistente.";
+            throw string("Caminho inexistente.");
     }
 
     i = 1; // ignoramos '/' no começo da string
@@ -210,6 +230,8 @@ void ArquivoGenerico::carrega(int numBloco) { }
 
 void ArquivoGenerico::salva() { }
 
+Arquivo::~Arquivo() { }
+
 Arquivo::Arquivo() : ArquivoGenerico() {
     qntArquivos++;
     conteudo = "";
@@ -239,32 +261,10 @@ void Arquivo::carrega(int numBloco) {
     int base, limite;
     int ende; // Endereço atual sendo lido
 
-    // auto pegaTempo = [&ende](int tam) {
-    // string aux;
-    // aux = "";
-    // for (int i = 0; i < tam; i++, ende++) aux.push_back(discoAtual[ende]);
-    // return (time_t) stoi(aux);
-    // };
-
     ende = blocoEmBaseLimite(numBloco, base, limite);
     cout << "Carregando arquivo do endereço " << ende << endl;
 
     ende += 2; // Pular o '\\' e o 'A'
-
-    // Pegar os tempos criado, modificado e acessado
-    // for (time_t *tempo : { &tempoCriado, &tempoModificado, &tempoAcesso })
-    // *tempo = pegaTempo(TAM_TEMPO);
-
-    // Pegar o tamanho do arquivo
-    // string aux = "";
-    // for (int i = 0; i < TAM_TAMANHO; i++, ende++)
-    // aux.push_back(discoAtual[ende]);
-    // tamanho = stoi(aux);
-
-    // Pegar o nome
-    // aux = "";
-    // while (discoAtual[ende] != '|') aux.push_back(discoAtual[ende++]);
-    // nome = aux;
 
     conteudo = "";
     while (numBloco != BLOCO_NULO) {
@@ -280,35 +280,12 @@ void Arquivo::salva() {
     int ende; // Endereço atual sendo lido
     int numBloco = informacoes->numPrimeiroBloco;
 
-    // auto escreveTempo = [&ende, this](time_t tempo) {
-    // string aux;
-    // aux = to_string(tempo);
-    // if ((int) aux.size() != TAM_TEMPO)
-    // throw "Tempo deveria ser igual a " + to_string(TAM_TEMPO);
-    // for (int i = 0; i < TAM_TEMPO; i++, ende++) discoAtual[ende] = aux[i];
-    // };
-
     ende = blocoEmBaseLimite(numBloco, base, limite);
     cout << "Salvando o arquivo " << informacoes->nome << " na posição " << ende
          << endl;
 
     discoAtual[ende++] = '\\';
-
     discoAtual[ende++] = 'A';
-
-    // Escrever os tempos criado, modificado e acessado
-    // for (time_t tempo : { tempoCriado, tempoModificado, tempoAcesso })
-    // escreveTempo(tempo);
-
-    // Escrever o tamanho do arquivo
-    // string aux = intParaString(tamanho, TAM_TAMANHO);
-
-    // for (int i = 0; i < TAM_TAMANHO; i++, ende++) discoAtual[ende] = aux[i];
-
-    // Escrever o nome do arquivo
-    // for (int i = 0; i < (int) nome.size(); i++, ende++)
-    // discoAtual[ende] = nome[i];
-    // discoAtual[ende++] = '|';
 
     int i = 0; // posicao atual do conteudo
     while (numBloco != BLOCO_NULO) {
@@ -316,7 +293,7 @@ void Arquivo::salva() {
             discoAtual[ende] = conteudo[i];
 
         // se o conteudo acabou antes do limite do bloco, preenchemos com 'nulo'
-        while (ende < limite) discoAtual[ende] = CHAR_NULO;
+        while (ende < limite) discoAtual[ende++] = CHAR_NULO;
 
         /* TODO: Preciso alocar mais blocos? <23-11-20, Lucas> */
         numBloco = FAT.ponteiro[numBloco]; // próximo bloco
@@ -325,6 +302,8 @@ void Arquivo::salva() {
 }
 
 Diretorio::Diretorio() : ArquivoGenerico() { qntDiretorios++; }
+
+Diretorio::~Diretorio() { }
 
 Diretorio::Diretorio(string nome) : ArquivoGenerico(nome) {
     qntDiretorios++;
@@ -361,15 +340,6 @@ void Diretorio::carrega(int numBloco) {
     cout << "Carregando diretório do endereço " << ende << endl;
 
     ende += 2; // Pular o '\\' e 'D'
-
-    // Pegar os tempos criado, modificado e acessado
-    // for (time_t *tempo : { &tempoCriado, &tempoModificado, &tempoAcesso })
-    // *tempo = pegaTempo(TAM_TEMPO);
-
-    // Pegar o nome do diretório
-    // string aux = "";
-    // while (discoAtual[ende] != '|') aux.push_back(discoAtual[ende++]);
-    // nome = aux;
 
     // Pegar as entradas de arquivo
     while (discoAtual[ende] != '|') {
@@ -429,7 +399,7 @@ void Diretorio::carrega(int numBloco) {
         for (; discoAtual[enderecoPonteiro] != '|';
              enderecoPonteiro++, pulaBloco())
             aux.push_back(discoAtual[enderecoPonteiro]);
-        subArqInfo->nome = stoi(aux);
+        subArqInfo->nome = aux;
 
         subArqInfo->pai = this;
     }
@@ -461,7 +431,7 @@ void Diretorio::salva() {
         string aux;
         aux = to_string(tempo);
         if ((int) aux.size() != TAM_TEMPO)
-            throw "Tempo deveria ser igual a " + to_string(TAM_TEMPO);
+            throw string("Tempo deveria ser igual a " + to_string(TAM_TEMPO));
         for (int i = 0; i < TAM_TEMPO; i++, ende++) {
             alocaaux();
             discoAtual[ende] = aux[i];
@@ -474,15 +444,6 @@ void Diretorio::salva() {
 
     discoAtual[ende++] = '\\';
     discoAtual[ende++] = 'D';
-
-    // Escrever os tempos criado, modificado e acessado
-    // for (time_t tempo : { tempoCriado, tempoModificado, tempoAcesso })
-    // escreveTempo(tempo);
-
-    // Escrever o nome do diretório
-    // for (int i = 0; i < (int) nome.size(); i++, ende++)
-    // discoAtual[ende] = nome[i];
-    // discoAtual[ende++] = '|';
 
     // Escrever as entradas de arquivo
     queue<int> fila;
@@ -557,6 +518,7 @@ void Diretorio::adiciona(Diretorio *dir) {
         return arq->informacoes->nome < nome;
     };
 
+    dir->informacoes->pai = this;
     subArquivoInfo.push_back(dir->informacoes);
 
     auto iterDir = lower_bound(subDiretorio.begin(), subDiretorio.end(),
@@ -570,6 +532,7 @@ void Diretorio::adiciona(Arquivo *arq) {
         return arq->informacoes->nome < nome;
     };
 
+    arq->informacoes->pai = this;
     subArquivoInfo.push_back(arq->informacoes);
 
     auto iterDir = lower_bound(subArquivo.begin(), subArquivo.end(),
@@ -593,7 +556,7 @@ ArquivoGenerico *Diretorio::busca(string nomeArquivo) {
 
         if (iterArq == subArquivo.end() ||
             (*iterArq)->informacoes->nome != nomeArquivo)
-            throw "Arquivo " + nomeArquivo + " não encontrado.";
+            throw string("Arquivo " + nomeArquivo + " não encontrado.");
 
         return *iterArq;
     }
@@ -615,6 +578,22 @@ bool Diretorio::buscaAbaixo(string caminho, string nomeAtual) {
             dir->buscaAbaixo(caminho + "/" + dir->informacoes->nome, nomeAtual);
     return retorno;
 }
+
+void Diretorio::libera() {
+    for (Diretorio * subDir : subDiretorio) {
+        subDir->libera();
+        delete subDir;
+    }
+    subDiretorio.clear();
+
+    for (ArquivoInfo *arqInfo : subArquivoInfo) delete arqInfo;
+    subArquivoInfo.clear();
+
+    for (Arquivo *arq : subArquivo) delete arq;
+    subArquivo.clear();
+}
+
+Root::~Root() { }
 
 void Root::inicializa() {
     informacoes.nome = "/";
@@ -664,7 +643,10 @@ void Root::carrega(int numBloco) {
     while (discoAtual[ende] != '|') aux.push_back(discoAtual[ende++]);
     informacoes.nome = aux;
 
+    ende++; // pula a '|' que indica o fim do nome
+
     while (discoAtual[ende] != '|') {
+        cout << "entrando no while" << endl;
         ArquivoInfo *subArqInfo = new ArquivoInfo();
         subArquivoInfo.push_back(subArqInfo);
 
@@ -721,7 +703,7 @@ void Root::carrega(int numBloco) {
         for (; discoAtual[enderecoPonteiro] != '|';
              enderecoPonteiro++, pulaBloco())
             aux.push_back(discoAtual[enderecoPonteiro]);
-        subArqInfo->nome = stoi(aux);
+        subArqInfo->nome = aux;
 
         subArqInfo->pai = this;
     }
@@ -753,7 +735,7 @@ void Root::salva() {
         string aux;
         aux = to_string(tempo);
         if ((int) aux.size() != TAM_TEMPO)
-            throw "Tempo deveria ser igual a " + to_string(TAM_TEMPO);
+            throw string("Tempo deveria ser igual a " + to_string(TAM_TEMPO));
         for (int i = 0; i < TAM_TEMPO; i++, ende++) {
             alocaaux();
             discoAtual[ende] = aux[i];
@@ -932,8 +914,13 @@ void Bitmap_t::inicializa() {
 void Bitmap_t::carrega(int numBloco) {
     blocosLivres = 0;
     for (int i = 0; i < NUM_BLOCOS; i++) {
-        livre[i] = (bool) discoAtual[i] - '0';
+        livre[i] = (bool) (discoAtual[i] - '0');
         if (livre[i]) blocosLivres++;
+    }
+    proxLivre = 1;
+    while (livre[proxLivre] == OCUPADO && proxLivre != 0) {
+        proxLivre++;
+        proxLivre %= NUM_BLOCOS;
     }
 }
 
@@ -948,14 +935,17 @@ void Bitmap_t::salva() {
 
 int Bitmap_t::pegaProxLivre() {
     int blocoInicial = proxLivre - 1;
+    cout << "bloco inicial = " << blocoInicial << endl;
     if (blocoInicial < 0) blocoInicial += NUM_BLOCOS;
 
-    while (livre[proxLivre] == false && proxLivre != blocoInicial) {
+    cout << "livre[" << proxLivre << "] = " << livre[proxLivre] << endl;
+    while (livre[proxLivre] == OCUPADO && proxLivre != blocoInicial) {
+        cout << "livre[" << proxLivre << "] = " << livre[proxLivre] << endl;
         proxLivre++;
         proxLivre %= NUM_BLOCOS;
     }
 
-    if (proxLivre == blocoInicial) throw "O disco está cheio.";
+    if (proxLivre == blocoInicial) throw string("O disco está cheio.");
 
     return proxLivre;
 }

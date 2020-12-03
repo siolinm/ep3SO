@@ -5,7 +5,7 @@ COMPILER   = g++
 LIBS_EP3   = # -lpthread
 
 default: ep3
-	[ ! -f ./test.txt ] || rm ./test.txt
+	# [ ! -f ./test.txt ] || rm ./test.txt
 
 ep3: $(EPOBJS)
 	$(COMPILER) $(CFLAGS) $(EPOBJS) -o ep3 $(LIBS_EP3)

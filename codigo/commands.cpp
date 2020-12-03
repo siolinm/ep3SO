@@ -5,6 +5,8 @@
 #include <iomanip>
 #include <sstream>
 
+#include "util.hpp"
+
 void mount() {
     cin >> nomeArquivo;
 
@@ -34,42 +36,48 @@ void mount() {
     arquivo.close();
 
     // Criamos a árvore de arquivos na memória principal
+    Bitmap.carrega(0);
+    FAT.carrega(0);
     root.carrega(0);
 }
 
 void cp() {
-    string origem, destino;
+    string origem, destino, nomeArq;
     cin >> origem >> destino;
 
-    cout << origem << " " << destino << "\n";
+    ifstream arquivo(origem);
+    stringstream str;
+    str << arquivo.rdbuf();
+
+    divideEmArquivoECaminho(destino, nomeArq);
+
+    Diretorio *dirPai = (Diretorio *) caminhoParaArquivo(destino);
+
+    if (dirPai == nullptr) {
+        cerr << "Caminho inexistente" << endl;
+        return;
+    }
+
+    Arquivo *novoArquivo = new Arquivo(nomeArq, str.str().size() + 2);
+    novoArquivo->conteudo = str.str();
+    dirPai->adiciona(novoArquivo);
 }
 
 void mkdir() {
     string diretorio, nomeDir;
     cin >> diretorio;
 
-    nomeDir = "";
-
-    if (diretorio.back() == '/') diretorio.pop_back();
-
-    while (diretorio.back() != '/') {
-        nomeDir.push_back(diretorio.back());
-        diretorio.pop_back();
-    }
-
-    if (diretorio.size() != 1)
-        diretorio.pop_back();
-
-    reverse(nomeDir.begin(), nomeDir.end());
+    divideEmArquivoECaminho(diretorio, nomeDir);
 
     Diretorio *dirPai = (Diretorio *) caminhoParaArquivo(diretorio);
-    if (dirPai != nullptr) {
-        Diretorio *novo = new Diretorio(nomeDir, 0);
-        novo->informacoes->pai = dirPai;
-        dirPai->adiciona(novo);
-    } else {
-        cout << "Caminho inexistente" << endl;
+
+    if (dirPai == nullptr) {
+        cerr << "Caminho inexistente" << endl;
+        return;
     }
+
+    Diretorio *novo = new Diretorio(nomeDir, 0);
+    dirPai->adiciona(novo);
 }
 
 void rmdir() {
@@ -106,7 +114,7 @@ void ls() {
 
     Diretorio *dir = (Diretorio *) caminhoParaArquivo(diretorio);
 
-    cout << "   Size Tempo Criado  Tempo Modifi  Tempo Acesso   Name";
+    cout << "   Size Tempo Criado  Tempo Modifi  Tempo Acesso  Name";
     cout << endl;
 
     for (ArquivoInfo *arqInfo : dir->subArquivoInfo) arqInfo->imprimeInfos();
@@ -136,6 +144,6 @@ void umount() {
     ofstream arquivo(nomeArquivo);
     arquivo << discoAtual;
 
-    // Free em tudo os bagulho
     arquivo.close();
+    root.libera();
 }

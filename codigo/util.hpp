@@ -79,6 +79,8 @@ class ArquivoGenerico : public Escrevivel {
 
     virtual void carrega(int);
     virtual void salva();
+
+    virtual ~ArquivoGenerico();
 };
 
 class Arquivo : public ArquivoGenerico {
@@ -91,6 +93,8 @@ class Arquivo : public ArquivoGenerico {
 
     void carrega(int);
     void salva();
+
+    ~Arquivo();
 };
 
 class Diretorio : public ArquivoGenerico {
@@ -109,6 +113,9 @@ class Diretorio : public ArquivoGenerico {
     void adiciona(Diretorio *);
     ArquivoGenerico *busca(string);
     bool buscaAbaixo(string, string);
+    void libera();
+
+    ~Diretorio();
 };
 
 class Root : public Diretorio {
@@ -117,6 +124,8 @@ class Root : public Diretorio {
     void inicializa();
     void carrega(int);
     void salva();
+
+    ~Root();
 };
 
 class FAT_t : public Escrevivel {
@@ -173,8 +182,9 @@ int blocoEmBaseLimite(int, int &, int &);
 
 string intParaString(int, int);
 
-string intParaMes(int inteiro);
-string bytesFormatados(int tamanhoBytes);
+string intParaMes(int);
+string bytesFormatados(int);
+void divideEmArquivoECaminho(string &, string &);
 
 ArquivoGenerico *caminhoParaArquivo(string caminho);
 

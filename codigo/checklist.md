@@ -21,6 +21,8 @@
     - [ ] df
     - [x] umount
     - [x] sai
+- [x] Dar free em tudo
+- [ ] Lembrar de mudar o tempo de acesso e modificação
 
 Tarefas se sobrar tempo:
     - [ ] usar a bib gnu history
@@ -28,4 +30,4 @@ Tarefas se sobrar tempo:
 Erros encontrados:
     - [x] diretório dentro de diretório
     - [x] bitmap não alocando
-    - [ ] carrega não está funcionando (só carrega a root)
+    - [x] carrega não está funcionando (só carrega a root)
