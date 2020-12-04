@@ -10,12 +10,12 @@
 - [x] Consertar o bitmap e a fat;
 - [ ] Implementar os demais comandos:
     - [x] mount
-    - [ ] cp
-    - [ ] mkdir
-    - [ ] rmdir
-    - [ ] cat
-    - [ ] touch
-    - [ ] rm
+    - [x] cp
+    - [x] mkdir
+    - [x] rmdir
+    - [x] cat
+    - [x] touch
+    - [x] rm
     - [x] ls
     - [x] find
     - [ ] df
@@ -23,11 +23,27 @@
     - [x] sai
 - [x] Dar free em tudo
 - [ ] Lembrar de mudar o tempo de acesso e modificação
+  - [ ] Quando implementar a função remove fazer isso automaticamente
+  - [x] Quando implementar a função adiciona fazer isso automaticamente
+- [ ] Checar por estourar o limite de memória (vai mudar o cp e comandos que alteram o diretório)
+- [ ] Decrementar a quantidade de arquivos e diretórios (provavelmente no destrutor)
 
-Tarefas se sobrar tempo:
+- [ ] Tarefas se sobrar tempo:
     - [ ] usar a bib gnu history
 
-Erros encontrados:
+- [ ] Erros encontrados
     - [x] diretório dentro de diretório
     - [x] bitmap não alocando
     - [x] carrega não está funcionando (só carrega a root)
+
+
+| Comandos | Acesso | Modificação | Criação | Onde |
+| :--: | :--: | :--: | :--: | :--: |
+| cp | X | X |  | P |
+| mkdir | X | X |  | P |
+| rmdir | X | X |  | P |
+| cat |  |  |  | |
+| touch | X | X |  | A(P*) |
+| rm | X | X |  | P |
+| ls |   |   |   |  |
+| find |   |   |   |   |

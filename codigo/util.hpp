@@ -18,8 +18,9 @@ using namespace std;
 #define TAM_FAT 128000
 #define TAM_ENDERECO 8
 
-#define BLOCO_NULO -1
+#define BLOCO_NULO 54321
 #define CHAR_NULO ' '
+#define SEPARADOR '|'
 
 #define LIVRE true
 #define OCUPADO false
@@ -111,6 +112,8 @@ class Diretorio : public ArquivoGenerico {
     virtual void salva();
     void adiciona(Arquivo *);
     void adiciona(Diretorio *);
+    void remove(Arquivo *);
+    void remove(Diretorio *);
     ArquivoGenerico *busca(string);
     bool buscaAbaixo(string, string);
     void libera();
@@ -119,12 +122,11 @@ class Diretorio : public ArquivoGenerico {
 };
 
 class Root : public Diretorio {
-  public:
-    ArquivoInfo informacoes;
+  public:    
     void inicializa();
     void carrega(int);
     void salva();
-
+    Root();
     ~Root();
 };
 

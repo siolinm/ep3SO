@@ -60,7 +60,7 @@ void cp() {
 
     Arquivo *novoArquivo = new Arquivo(nomeArq, str.str().size() + 2);
     novoArquivo->conteudo = str.str();
-    dirPai->adiciona(novoArquivo);
+    dirPai->adiciona(novoArquivo);    
 }
 
 void mkdir() {
@@ -83,29 +83,67 @@ void mkdir() {
 void rmdir() {
     string diretorio;
     cin >> diretorio;
+      
+    Diretorio *dir = (Diretorio *) caminhoParaArquivo(diretorio);
 
-    cout << diretorio << "\n";
+    if (dir == nullptr) {
+        cerr << "Caminho inexistente" << endl;
+        return;
+    }
+    
+    dir->informacoes->pai->remove(dir);    
 }
 
 void cat() {
     string arquivo;
     cin >> arquivo;
 
-    cout << arquivo << "\n";
+    Arquivo * arq = (Arquivo *)caminhoParaArquivo(arquivo);
+    
+    if(arq == nullptr) return;
+
+    cout << arq->conteudo << endl;
+    /* cout << arquivo << "\n"; */
 }
 
 void touch() {
-    string arquivo;
+    string arquivo, nomeArq;
     cin >> arquivo;
 
-    cout << arquivo << "\n";
+    Arquivo * arq = (Arquivo *) caminhoParaArquivo(arquivo);
+
+    if(arq != nullptr){
+        /* altera data de acesso e modificacao */
+        arq->informacoes->atualizaTempo(T_ACESSO + T_MODIFICADO);
+    }
+    else{
+        divideEmArquivoECaminho(arquivo, nomeArq);
+
+        Diretorio *dirPai = (Diretorio *) caminhoParaArquivo(arquivo);
+
+        if (dirPai == nullptr) {
+            cerr << "Caminho inexistente" << endl;
+            return;
+        }
+
+        Arquivo *novoArquivo = new Arquivo(nomeArq, 2);
+        novoArquivo->conteudo = "";
+        dirPai->adiciona(novoArquivo);
+    }
 }
 
 void rm() {
     string arquivo;
     cin >> arquivo;
 
-    cout << arquivo << "\n";
+    Arquivo *arq = (Arquivo *) caminhoParaArquivo(arquivo);
+
+    if (arq == nullptr) {
+        cerr << "Caminho inexistente" << endl;
+        return;
+    }
+    
+    arq->informacoes->pai->remove(arq);
 }
 
 void ls() {
@@ -128,8 +166,8 @@ void find() {
 
     dir = (Diretorio *) caminhoParaArquivo(diretorio);
 
-    if (!dir->buscaAbaixo(diretorio, arquivo))
-        cout << "Arquivo não encontrado" << endl;
+    if(dir == nullptr || !dir->buscaAbaixo(diretorio, arquivo))    
+        cerr << "Arquivo não encontrado" << endl;
 }
 
 void df() { }
