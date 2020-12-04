@@ -84,12 +84,17 @@ void rmdir() {
     string diretorio;
     cin >> diretorio;
 
+    if(diretorio.size() == 1){
+        cout << "Não é possível remover este diretório" << endl;
+        return;
+    }
+
     Diretorio *dir = (Diretorio *) caminhoParaArquivo(diretorio);
 
     if (dir == nullptr) {
         cerr << "Caminho inexistente" << endl;
         return;
-    }
+    }    
 
     dir->informacoes->pai->remove(dir);
 }
@@ -169,14 +174,19 @@ void find() {
         cerr << "Arquivo não encontrado" << endl;
 }
 
-void df() { }
+void df() { 
+    cout << "Quantidade de diretórios: " << qntDiretorios << endl;
+    cout << "Quantidade de arquivos: " << qntArquivos << endl;
+    cout << "Espaço Livre: " << Bitmap.blocosLivres*UNI_ALOCACAO << endl;
+    cout << "Espaço Desperdiçado: " << espacoDesperdicadoTotal << endl;
+}
 
 void umount() {
     // Salvamos toda a árvore de arquivos para a string discoAtual, o fat e
     // bitmap
     Bitmap.salva();
     FAT.salva();
-    root.salva();
+    root.salvaTudo();
 
     ofstream arquivo(nomeArquivo);
     arquivo << discoAtual;

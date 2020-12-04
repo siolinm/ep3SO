@@ -46,5 +46,7 @@ int main() {
     }
     cout << "\n";
 
+    root.libera();
+
     return 0;
 }

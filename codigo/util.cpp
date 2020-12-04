@@ -17,6 +17,7 @@ Root root;
 string nomeArquivo;
 int qntArquivos = 0;
 int qntDiretorios = 0;
+int espacoDesperdicadoTotal = 0;
 
 int blocoEmEndereco(int numBloco) {
     return TAM_BITMAP + TAM_FAT + numBloco * UNI_ALOCACAO;
@@ -118,6 +119,7 @@ ArquivoInfo::ArquivoInfo() {
     nome = "";
     ptNome = 0;
     ehDiretorio = '0';
+    espacoDesperdicado = 0;
 }
 
 ArquivoInfo::ArquivoInfo(string nome) {
@@ -127,6 +129,7 @@ ArquivoInfo::ArquivoInfo(string nome) {
     this->nome = nome;
     ptNome = 0;
     ehDiretorio = '0';
+    espacoDesperdicado = 0;
 }
 
 ArquivoInfo::ArquivoInfo(string nome, int tamanho) {
@@ -136,6 +139,8 @@ ArquivoInfo::ArquivoInfo(string nome, int tamanho) {
     this->nome = nome;
     ptNome = 0;
     ehDiretorio = '0';
+    espacoDesperdicado = UNI_ALOCACAO - (tamanho % UNI_ALOCACAO);
+    espacoDesperdicadoTotal += espacoDesperdicado;
 }
 
 void ArquivoInfo::atualizaTempo(int bitmask) {
@@ -170,7 +175,10 @@ void ArquivoInfo::imprimeInfos() {
     cout << nome << endl;
 }
 
-ArquivoGenerico::~ArquivoGenerico() { }
+ArquivoGenerico::~ArquivoGenerico() {    
+    // FAT.liberaBlocos(informacoes->numPrimeiroBloco);
+    delete (informacoes);
+}
 
 ArquivoGenerico::ArquivoGenerico() { informacoes = nullptr; }
 
@@ -216,8 +224,8 @@ ArquivoGenerico *caminhoParaArquivo(string caminho) {
     retorn = atual->busca(nomeAtual);
 
     if (retorn == nullptr) {
-        cerr << "ERRO: Arquivo não encontrado!" << endl;
-        cerr << "Retornando arquivo nulo!" << endl;
+        // cerr << "ERRO: Arquivo não encontrado!" << endl;
+        // cerr << "Retornando arquivo nulo!" << endl;
         return nullptr;
     }
 
@@ -228,7 +236,9 @@ void ArquivoGenerico::carrega(int numBloco) { }
 
 void ArquivoGenerico::salva() { }
 
-Arquivo::~Arquivo() { }
+Arquivo::~Arquivo() {    
+    qntArquivos--;
+}
 
 Arquivo::Arquivo() : ArquivoGenerico() {
     qntArquivos++;
@@ -306,7 +316,9 @@ void Arquivo::salva() {
 
 Diretorio::Diretorio() : ArquivoGenerico() { qntDiretorios++; }
 
-Diretorio::~Diretorio() { }
+Diretorio::~Diretorio(){ 
+    qntDiretorios--;
+}
 
 Diretorio::Diretorio(string nome) : ArquivoGenerico(nome) {
     qntDiretorios++;
@@ -372,13 +384,13 @@ void Diretorio::carrega(int numBloco) {
 
         if (subArqInfo->ehDiretorio == 'D') {
             Diretorio *subDir = new Diretorio();
-            subDir->carrega(subArqInfo->numPrimeiroBloco);
             subDir->informacoes = subArqInfo;
+            subDir->carrega(subArqInfo->numPrimeiroBloco);
             subDiretorio.push_back(subDir);
         } else {
             Arquivo *subArq = new Arquivo();
-            subArq->carrega(subArqInfo->numPrimeiroBloco);
             subArq->informacoes = subArqInfo;
+            subArq->carrega(subArqInfo->numPrimeiroBloco);
             subArquivo.push_back(subArq);
         }
 
@@ -407,6 +419,9 @@ void Diretorio::carrega(int numBloco) {
 
         subArqInfo->pai = this;
     }
+
+    informacoes->espacoDesperdicado = limite - ende;    
+    espacoDesperdicadoTotal += informacoes->espacoDesperdicado;
 
     auto porNome = [](ArquivoGenerico *a1, ArquivoGenerico *a2) {
         return a1->informacoes->nome < a2->informacoes->nome;
@@ -515,6 +530,16 @@ void Diretorio::salva() {
         discoAtual[ende++] = SEPARADOR;
     }
 
+    espacoDesperdicadoTotal -= informacoes->espacoDesperdicado;
+    informacoes->espacoDesperdicado = limite - ende;
+    espacoDesperdicadoTotal += informacoes->espacoDesperdicado;
+    FAT.liberaBlocos(FAT.ponteiro[numBloco]);
+    
+}
+
+void Diretorio::salvaTudo(){
+    salva();
+
     for (Diretorio *subDir : subDiretorio) subDir->salva();
     for (Arquivo *subArq : subArquivo) subArq->salva();
 }
@@ -533,6 +558,8 @@ void Diretorio::adiciona(Diretorio *dir) {
     subDiretorio.insert(iterDir, dir);
 
     informacoes->atualizaTempo(T_ACESSO + T_MODIFICADO);
+
+    salva();
 }
 
 void Diretorio::adiciona(Arquivo *arq) {
@@ -549,32 +576,42 @@ void Diretorio::adiciona(Arquivo *arq) {
     subArquivo.insert(iterDir, arq);
 
     informacoes->atualizaTempo(T_ACESSO + T_MODIFICADO);
+    
+    salva();
 }
 
 void Diretorio::remove(Diretorio *dir) {
     auto porNome = [](ArquivoGenerico *arq, string nome) {
         return arq->informacoes->nome < nome;
-    };
+    };    
 
-    for (Diretorio *subDir : dir->subDiretorio) dir->remove(subDir);
+    for (Diretorio *subDir : dir->subDiretorio){
+        cout << "Removendo subdiretório " + subDir->informacoes->nome << endl;
+        dir->remove(subDir);
+    } 
 
-    for (Arquivo *subArq : dir->subArquivo) dir->remove(subArq);
+    for (Arquivo *subArq : dir->subArquivo){
+        cout << "Removendo subarquivo " + subArq->informacoes->nome << endl;
+        dir->remove(subArq);
+    } 
 
     auto it = subArquivoInfo.begin();
-    for (; (*it) == dir->informacoes; it++)
+    for (; (*it) != dir->informacoes; it++)
         ;
-
+    
     subArquivoInfo.erase(it);
 
     auto iterDir = lower_bound(subDiretorio.begin(), subDiretorio.end(),
                                dir->informacoes->nome, porNome);
 
     subDiretorio.erase(iterDir);
-
-    delete (dir->informacoes);
+    
+    FAT.liberaBlocos(dir->informacoes->numPrimeiroBloco);
     delete (dir);
 
     informacoes->atualizaTempo(T_ACESSO + T_MODIFICADO);
+
+    salva();
 }
 
 void Diretorio::remove(Arquivo *arq) {
@@ -583,7 +620,7 @@ void Diretorio::remove(Arquivo *arq) {
     };
 
     auto it = subArquivoInfo.begin();
-    for (; (*it) == arq->informacoes; it++)
+    for (; (*it) != arq->informacoes; it++)
         ;
 
     subArquivoInfo.erase(it);
@@ -592,11 +629,13 @@ void Diretorio::remove(Arquivo *arq) {
                                arq->informacoes->nome, porNome);
 
     subArquivo.erase(iterArq);
-
-    delete (arq->informacoes);
+    
+    FAT.liberaBlocos(arq->informacoes->numPrimeiroBloco);
     delete (arq);
 
     informacoes->atualizaTempo(T_ACESSO + T_MODIFICADO);
+    
+    salva();
 }
 
 ArquivoGenerico *Diretorio::busca(string nomeArquivo) {
@@ -650,7 +689,7 @@ void Diretorio::libera() {
     }
     subDiretorio.clear();
 
-    for (ArquivoInfo *arqInfo : subArquivoInfo) delete arqInfo;
+    // for (ArquivoInfo *arqInfo : subArquivoInfo) delete arqInfo;
     subArquivoInfo.clear();
 
     for (Arquivo *arq : subArquivo) delete arq;
@@ -677,7 +716,7 @@ void Root::inicializa() {
 void Root::carrega(int numBloco) {
     int base, limite;
     int ende; // Endereço atual sendo lido
-    numBloco = 0;
+    informacoes->numPrimeiroBloco = numBloco;
 
     auto pulaBloco = [&ende, &numBloco, &base, &limite]() {
         if (ende == limite) {
@@ -741,13 +780,13 @@ void Root::carrega(int numBloco) {
 
         if (subArqInfo->ehDiretorio == 'D') {
             Diretorio *subDir = new Diretorio();
-            subDir->carrega(subArqInfo->numPrimeiroBloco);
             subDir->informacoes = subArqInfo;
+            subDir->carrega(subArqInfo->numPrimeiroBloco);
             subDiretorio.push_back(subDir);
         } else {
             Arquivo *subArq = new Arquivo();
-            subArq->carrega(subArqInfo->numPrimeiroBloco);
             subArq->informacoes = subArqInfo;
+            subArq->carrega(subArqInfo->numPrimeiroBloco);
             subArquivo.push_back(subArq);
         }
 
@@ -969,8 +1008,14 @@ void FAT_t::liberaBlocos(int numBloco) {
     int prox;
 
     while (numBloco != BLOCO_NULO) {
+
+        if(DEBUG){
+            cout << "FAT_t::liberaBlocos(): Liberando bloco " << numBloco << " ..." << endl;
+        }
+        
         prox = FAT.ponteiro[numBloco];
         Bitmap.livre[numBloco] = LIVRE;
+        Bitmap.blocosLivres++;
         FAT.ponteiro[numBloco] = BLOCO_NULO;
 
         limpaBloco(numBloco);

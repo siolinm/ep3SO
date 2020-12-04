@@ -22,11 +22,11 @@
     - [x] umount
     - [x] sai
 - [x] Dar free em tudo
-- [ ] Lembrar de mudar o tempo de acesso e modificação
-  - [ ] Quando implementar a função remove fazer isso automaticamente
+- [x] Lembrar de mudar o tempo de acesso e modificação
+  - [x] Quando implementar a função remove fazer isso automaticamente
   - [x] Quando implementar a função adiciona fazer isso automaticamente
 - [ ] Checar por estourar o limite de memória (vai mudar o cp e comandos que alteram o diretório)
-- [ ] Decrementar a quantidade de arquivos e diretórios (provavelmente no destrutor)
+- [x] Decrementar a quantidade de arquivos e diretórios (provavelmente no destrutor)
 
 - [ ] Tarefas se sobrar tempo:
     - [ ] usar a bib gnu history

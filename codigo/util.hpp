@@ -51,6 +51,7 @@ class ArquivoInfo {
     time_t tempoAcesso;     // Tempo de último acesso ao arquivo
     int numPrimeiroBloco;   // Número do bloco cabeça do arquivo
     Diretorio *pai;         // Ponteiro para o diretório pai
+    int espacoDesperdicado;
 
     ArquivoInfo();
     ArquivoInfo(string);
@@ -119,6 +120,7 @@ class Diretorio : public ArquivoGenerico {
     ArquivoGenerico *busca(string);
     bool buscaAbaixo(string, string);
     void libera();
+    void salvaTudo();
 
     ~Diretorio();
 };
@@ -197,5 +199,9 @@ extern int qntArquivos;
 
 // A quantidade atual de diretórios criados
 extern int qntDiretorios;
+
+// A quantidade de espaço desperdiçado
+extern int espacoDesperdicadoTotal;
+
 
 #endif
