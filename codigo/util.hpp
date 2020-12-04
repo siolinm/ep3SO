@@ -19,6 +19,7 @@ using namespace std;
 #define TAM_ENDERECO 8
 
 #define BLOCO_NULO 54321
+#define BLOCO_INVALIDO -1
 #define CHAR_NULO ' '
 #define SEPARADOR '|'
 

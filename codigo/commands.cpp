@@ -58,9 +58,24 @@ void cp() {
         return;
     }
 
-    Arquivo *novoArquivo = new Arquivo(nomeArq, str.str().size() + 2);
+    Arquivo *novoArquivo = new Arquivo(nomeArq, str.str().size());
+    if (novoArquivo->informacoes->numPrimeiroBloco == BLOCO_INVALIDO) {
+        cerr << "O arquivo " << nomeArq << " não pôde ser criado." << endl;
+        delete novoArquivo;
+        return;
+    }
+
     novoArquivo->conteudo = str.str();
-    dirPai->adiciona(novoArquivo);
+    try {
+        dirPai->adiciona(novoArquivo);
+    } catch (string err) {
+        cerr << "cp: Erro ao adicionar o arquivo " << nomeArq
+             << " ao diretório " << dirPai->informacoes->nome << endl;
+        cerr << "erro: " << err << endl;
+        FAT.liberaBlocos(novoArquivo->informacoes->numPrimeiroBloco);
+        delete novoArquivo;
+        dirPai->salva();
+    }
 }
 
 void mkdir() {
@@ -76,15 +91,30 @@ void mkdir() {
         return;
     }
 
-    Diretorio *novo = new Diretorio(nomeDir, 0);
-    dirPai->adiciona(novo);
+    Diretorio *novoDiretorio = new Diretorio(nomeDir, 0);
+    if (novoDiretorio->informacoes->numPrimeiroBloco == BLOCO_INVALIDO) {
+        cerr << "O diretório " << nomeDir << " não pôde ser criado." << endl;
+        delete novoDiretorio;
+        return;
+    }
+
+    try {
+        dirPai->adiciona(novoDiretorio);
+    } catch (string err) {
+        cerr << "cp: Erro ao adicionar o diretório " << nomeDir
+             << " ao diretório " << dirPai->informacoes->nome << endl;
+        cerr << "erro: " << err << endl;
+        FAT.liberaBlocos(novoDiretorio->informacoes->numPrimeiroBloco);
+        delete novoDiretorio;
+        dirPai->salva();
+    }
 }
 
 void rmdir() {
     string diretorio;
     cin >> diretorio;
 
-    if(diretorio.size() == 1){
+    if (diretorio.size() == 1) {
         cout << "Não é possível remover este diretório" << endl;
         return;
     }
@@ -94,7 +124,7 @@ void rmdir() {
     if (dir == nullptr) {
         cerr << "Caminho inexistente" << endl;
         return;
-    }    
+    }
 
     dir->informacoes->pai->remove(dir);
 }
@@ -103,9 +133,9 @@ void cat() {
     string arquivo;
     cin >> arquivo;
 
-    Arquivo * arq = (Arquivo *)caminhoParaArquivo(arquivo);
+    Arquivo *arq = (Arquivo *) caminhoParaArquivo(arquivo);
 
-    if(arq == nullptr) return;
+    if (arq == nullptr) return;
 
     cout << arq->conteudo << endl;
 }
@@ -114,13 +144,12 @@ void touch() {
     string arquivo, nomeArq;
     cin >> arquivo;
 
-    Arquivo * arq = (Arquivo *) caminhoParaArquivo(arquivo);
+    Arquivo *arq = (Arquivo *) caminhoParaArquivo(arquivo);
 
-    if(arq != nullptr){
+    if (arq != nullptr) {
         /* altera data de acesso e modificacao */
         arq->informacoes->atualizaTempo(T_ACESSO + T_MODIFICADO);
-    }
-    else{
+    } else {
         divideEmArquivoECaminho(arquivo, nomeArq);
 
         Diretorio *dirPai = (Diretorio *) caminhoParaArquivo(arquivo);
@@ -130,9 +159,25 @@ void touch() {
             return;
         }
 
-        Arquivo *novoArquivo = new Arquivo(nomeArq, 2);
+        Arquivo *novoArquivo = new Arquivo(nomeArq);
+        if (novoArquivo->informacoes->numPrimeiroBloco == BLOCO_INVALIDO) {
+            cerr << "O arquivo " << nomeArq << " não pôde ser criado."
+                 << endl;
+            delete novoArquivo;
+            return;
+        }
         novoArquivo->conteudo = "";
-        dirPai->adiciona(novoArquivo);
+
+        try {
+            dirPai->adiciona(novoArquivo);
+        } catch (string err) {
+            cerr << "cp: Erro ao adicionar o arquivo " << nomeArq
+                 << " ao diretório " << dirPai->informacoes->nome << endl;
+            cerr << "erro: " << err << endl;
+            FAT.liberaBlocos(novoArquivo->informacoes->numPrimeiroBloco);
+            delete novoArquivo;
+            dirPai->salva();
+        }
     }
 }
 
@@ -170,14 +215,14 @@ void find() {
 
     dir = (Diretorio *) caminhoParaArquivo(diretorio);
 
-    if(dir == nullptr || !dir->buscaAbaixo(diretorio, arquivo))
+    if (dir == nullptr || !dir->buscaAbaixo(diretorio, arquivo))
         cerr << "Arquivo não encontrado" << endl;
 }
 
-void df() { 
+void df() {
     cout << "Quantidade de diretórios: " << qntDiretorios << endl;
     cout << "Quantidade de arquivos: " << qntArquivos << endl;
-    cout << "Espaço Livre: " << Bitmap.blocosLivres*UNI_ALOCACAO << endl;
+    cout << "Espaço Livre: " << Bitmap.blocosLivres * UNI_ALOCACAO << endl;
     cout << "Espaço Desperdiçado: " << espacoDesperdicadoTotal << endl;
 }
 

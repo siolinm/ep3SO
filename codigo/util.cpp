@@ -175,7 +175,7 @@ void ArquivoInfo::imprimeInfos() {
     cout << nome << endl;
 }
 
-ArquivoGenerico::~ArquivoGenerico() {    
+ArquivoGenerico::~ArquivoGenerico() {
     // FAT.liberaBlocos(informacoes->numPrimeiroBloco);
     delete (informacoes);
 }
@@ -236,7 +236,7 @@ void ArquivoGenerico::carrega(int numBloco) { }
 
 void ArquivoGenerico::salva() { }
 
-Arquivo::~Arquivo() {    
+Arquivo::~Arquivo() {
     qntArquivos--;
 }
 
@@ -259,7 +259,12 @@ Arquivo::Arquivo(string nome, int tamanho) : ArquivoGenerico(nome, tamanho) {
     informacoes->numPrimeiroBloco = FAT.alocaBloco();
     tamanho -= 4000;
     while (tamanho > 0) {
-        FAT.alocaBloco(informacoes->numPrimeiroBloco);
+        if (FAT.alocaBloco(informacoes->numPrimeiroBloco) == BLOCO_INVALIDO) {
+            FAT.liberaBlocos(informacoes->numPrimeiroBloco);
+            informacoes->numPrimeiroBloco = BLOCO_INVALIDO;
+            break;
+        }
+
         tamanho -= 4000;
     }
 }
@@ -272,8 +277,6 @@ void Arquivo::carrega(int numBloco) {
     ende = blocoEmBaseLimite(numBloco, base, limite);
 
     if (DEBUG) cout << "Carregando arquivo do endereço " << ende << endl;
-
-    ende += 2; // Pular o '\\' e o 'A'
 
     conteudo = "";
     while (numBloco != BLOCO_NULO) {
@@ -296,9 +299,6 @@ void Arquivo::salva() {
         cout << "Salvando o arquivo " << informacoes->nome << " na posição "
              << ende << endl;
 
-    discoAtual[ende++] = '\\';
-    discoAtual[ende++] = 'A';
-
     int i = 0; // posicao atual do conteudo
     while (numBloco != BLOCO_NULO) {
         for (; i < (int) conteudo.size() && ende < limite; i++, ende++)
@@ -308,7 +308,6 @@ void Arquivo::salva() {
         // se o conteudo acabou antes do limite do bloco, preenchemos com 'nulo'
         while (ende < limite) discoAtual[ende++] = CHAR_NULO;
 
-        /* TODO: Preciso alocar mais blocos? <23-11-20, Lucas> */
         numBloco = FAT.ponteiro[numBloco]; // próximo bloco
         ende = blocoEmBaseLimite(numBloco, base, limite);
     }
@@ -316,7 +315,7 @@ void Arquivo::salva() {
 
 Diretorio::Diretorio() : ArquivoGenerico() { qntDiretorios++; }
 
-Diretorio::~Diretorio(){ 
+Diretorio::~Diretorio(){
     qntDiretorios--;
 }
 
@@ -354,8 +353,6 @@ void Diretorio::carrega(int numBloco) {
     ende = blocoEmBaseLimite(numBloco, base, limite);
 
     if (DEBUG) cout << "Carregando diretório do endereço " << ende << endl;
-
-    ende += 2; // Pular o '\\' e 'D'
 
     // Pegar as entradas de arquivo
     while (discoAtual[ende] != SEPARADOR) {
@@ -420,7 +417,7 @@ void Diretorio::carrega(int numBloco) {
         subArqInfo->pai = this;
     }
 
-    informacoes->espacoDesperdicado = limite - ende;    
+    informacoes->espacoDesperdicado = limite - ende;
     espacoDesperdicadoTotal += informacoes->espacoDesperdicado;
 
     auto porNome = [](ArquivoGenerico *a1, ArquivoGenerico *a2) {
@@ -438,9 +435,11 @@ void Diretorio::salva() {
 
     auto alocaaux = [&ende, &numBloco, &base, &limite]() {
         if (ende == limite) {
-            if ((numBloco = FAT.ponteiro[numBloco]) == BLOCO_NULO) {
+            if (FAT.ponteiro[numBloco] == BLOCO_NULO) {
                 // preciso alocar um novo bloco
                 numBloco = FAT.alocaBloco(numBloco);
+                if (numBloco == BLOCO_INVALIDO)
+                    throw string("Memória insuficiente");
             }
             ende = blocoEmBaseLimite(numBloco, base, limite);
         }
@@ -462,9 +461,6 @@ void Diretorio::salva() {
     if (DEBUG)
         cout << "Salvando o diretório " << informacoes->nome << " na posição "
              << ende << endl;
-
-    discoAtual[ende++] = '\\';
-    discoAtual[ende++] = 'D';
 
     // Escrever as entradas de arquivo
     queue<int> fila;
@@ -534,13 +530,16 @@ void Diretorio::salva() {
     informacoes->espacoDesperdicado = limite - ende;
     espacoDesperdicadoTotal += informacoes->espacoDesperdicado;
     FAT.liberaBlocos(FAT.ponteiro[numBloco]);
-    
 }
 
-void Diretorio::salvaTudo(){
-    salva();
+void Diretorio::salvaTudo() {
+    try {
+        salva();
+    } catch (string err) {
+        cerr << "Diretorio::salvaTudo(): erro inesperado:\n" << err << endl;
+    }
 
-    for (Diretorio *subDir : subDiretorio) subDir->salva();
+    for (Diretorio *subDir : subDiretorio) subDir->salvaTudo();
     for (Arquivo *subArq : subArquivo) subArq->salva();
 }
 
@@ -576,36 +575,36 @@ void Diretorio::adiciona(Arquivo *arq) {
     subArquivo.insert(iterDir, arq);
 
     informacoes->atualizaTempo(T_ACESSO + T_MODIFICADO);
-    
+
     salva();
 }
 
 void Diretorio::remove(Diretorio *dir) {
     auto porNome = [](ArquivoGenerico *arq, string nome) {
         return arq->informacoes->nome < nome;
-    };    
+    };
 
     for (Diretorio *subDir : dir->subDiretorio){
         cout << "Removendo subdiretório " + subDir->informacoes->nome << endl;
         dir->remove(subDir);
-    } 
+    }
 
     for (Arquivo *subArq : dir->subArquivo){
         cout << "Removendo subarquivo " + subArq->informacoes->nome << endl;
         dir->remove(subArq);
-    } 
+    }
 
     auto it = subArquivoInfo.begin();
     for (; (*it) != dir->informacoes; it++)
         ;
-    
+
     subArquivoInfo.erase(it);
 
     auto iterDir = lower_bound(subDiretorio.begin(), subDiretorio.end(),
                                dir->informacoes->nome, porNome);
 
     subDiretorio.erase(iterDir);
-    
+
     FAT.liberaBlocos(dir->informacoes->numPrimeiroBloco);
     delete (dir);
 
@@ -629,12 +628,12 @@ void Diretorio::remove(Arquivo *arq) {
                                arq->informacoes->nome, porNome);
 
     subArquivo.erase(iterArq);
-    
+
     FAT.liberaBlocos(arq->informacoes->numPrimeiroBloco);
     delete (arq);
 
     informacoes->atualizaTempo(T_ACESSO + T_MODIFICADO);
-    
+
     salva();
 }
 
@@ -708,6 +707,7 @@ void Root::inicializa() {
     informacoes->pai = nullptr;
     informacoes->tamanho = 0;
     informacoes->numPrimeiroBloco = 0;
+    informacoes->espacoDesperdicado = 0; // isso é mudado no futuro, ao salvar
     Bitmap.livre[0] = OCUPADO;
     Bitmap.blocosLivres--;
     FAT.ponteiro[0] = BLOCO_NULO;
@@ -734,9 +734,7 @@ void Root::carrega(int numBloco) {
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
 
-    if (DEBUG) cout << "carregando / do endereço " << ende << endl;
-
-    ende += 2; // Pular o '\\' e 'D'
+    if (DEBUG) cout << "Carregando / do endereço " << ende << endl;
 
     // Root não tem pai
     informacoes->pai = nullptr;
@@ -852,9 +850,6 @@ void Root::salva() {
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
 
-    discoAtual[ende++] = '\\';
-    discoAtual[ende++] = 'D';
-
     // Escrever os tempos criado, modificado e acessado
     for (time_t tempo :
          { informacoes->tempoCriado, informacoes->tempoModificado,
@@ -930,8 +925,10 @@ void Root::salva() {
         discoAtual[ende++] = SEPARADOR;
     }
 
-    for (Diretorio *subDir : subDiretorio) subDir->salva();
-    for (Arquivo *subArq : subArquivo) subArq->salva();
+    espacoDesperdicadoTotal -= informacoes->espacoDesperdicado;
+    informacoes->espacoDesperdicado = limite - ende;
+    espacoDesperdicadoTotal += informacoes->espacoDesperdicado;
+    FAT.liberaBlocos(FAT.ponteiro[numBloco]);
 }
 
 void FAT_t::inicializa() {
@@ -979,15 +976,16 @@ int FAT_t::alocaBloco() {
         return blocoLivre;
     } catch (string erro) {
         cerr << "Erro ao alocar um bloco de memória:\n" << erro << endl;
-        return -1;
+        return BLOCO_INVALIDO;
     }
-    return -1;
+    return BLOCO_INVALIDO;
 }
 
 int FAT_t::alocaBloco(int numPrimeiroBloco) {
     try {
         int bloco_livre = Bitmap.pegaProxLivre();
 
+        cout << numPrimeiroBloco << endl;
         while (ponteiro[numPrimeiroBloco] != BLOCO_NULO)
             numPrimeiroBloco = ponteiro[numPrimeiroBloco];
 
@@ -999,9 +997,9 @@ int FAT_t::alocaBloco(int numPrimeiroBloco) {
         return bloco_livre;
     } catch (string erro) {
         cerr << "Erro ao alocar um bloco de memória:\n" << erro << endl;
-        return -1;
+        return BLOCO_INVALIDO;
     }
-    return -1;
+    return BLOCO_INVALIDO;
 }
 
 void FAT_t::liberaBlocos(int numBloco) {
@@ -1012,7 +1010,7 @@ void FAT_t::liberaBlocos(int numBloco) {
         if(DEBUG){
             cout << "FAT_t::liberaBlocos(): Liberando bloco " << numBloco << " ..." << endl;
         }
-        
+
         prox = FAT.ponteiro[numBloco];
         Bitmap.livre[numBloco] = LIVRE;
         Bitmap.blocosLivres++;
