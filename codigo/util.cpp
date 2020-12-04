@@ -192,7 +192,7 @@ ArquivoGenerico *caminhoParaArquivo(string caminho) {
     if (caminho.size() == 1) {
         if (caminho[0] == '/')
             return atual;
-        else{
+        else {
             cerr << "Caminho inexistente." << endl;
             return nullptr;
         }
@@ -208,15 +208,14 @@ ArquivoGenerico *caminhoParaArquivo(string caminho) {
 
         if (i < (int) caminho.size()) {
             atual = (Diretorio *) atual->busca(nomeAtual);
-            if(atual == nullptr)
-                return nullptr;                 
+            if (atual == nullptr) return nullptr;
         }
         i++;
     }
-    
-    retorn = atual->busca(nomeAtual);    
 
-    if(retorn == nullptr){
+    retorn = atual->busca(nomeAtual);
+
+    if (retorn == nullptr) {
         cerr << "ERRO: Arquivo não encontrado!" << endl;
         cerr << "Retornando arquivo nulo!" << endl;
         return nullptr;
@@ -261,13 +260,15 @@ void Arquivo::carrega(int numBloco) {
     int ende; // Endereço atual sendo lido
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
-    cout << "Carregando arquivo do endereço " << ende << endl;
+
+    if (DEBUG) cout << "Carregando arquivo do endereço " << ende << endl;
 
     ende += 2; // Pular o '\\' e o 'A'
 
     conteudo = "";
     while (numBloco != BLOCO_NULO) {
-        for (; ende < limite && discoAtual[ende] != SEPARADOR; ende++) conteudo.push_back(discoAtual[ende]);
+        for (; ende < limite && discoAtual[ende] != SEPARADOR; ende++)
+            conteudo.push_back(discoAtual[ende]);
 
         numBloco = FAT.ponteiro[numBloco]; // próximo bloco
         ende = blocoEmBaseLimite(numBloco, base, limite);
@@ -280,8 +281,10 @@ void Arquivo::salva() {
     int numBloco = informacoes->numPrimeiroBloco;
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
-    cout << "Salvando o arquivo " << informacoes->nome << " na posição " << ende
-         << endl;
+
+    if (DEBUG)
+        cout << "Salvando o arquivo " << informacoes->nome << " na posição "
+             << ende << endl;
 
     discoAtual[ende++] = '\\';
     discoAtual[ende++] = 'A';
@@ -290,8 +293,8 @@ void Arquivo::salva() {
     while (numBloco != BLOCO_NULO) {
         for (; i < (int) conteudo.size() && ende < limite; i++, ende++)
             discoAtual[ende] = conteudo[i];
-        
-        if(ende < limite) discoAtual[ende++] = SEPARADOR;
+
+        if (ende < limite) discoAtual[ende++] = SEPARADOR;
         // se o conteudo acabou antes do limite do bloco, preenchemos com 'nulo'
         while (ende < limite) discoAtual[ende++] = CHAR_NULO;
 
@@ -337,7 +340,8 @@ void Diretorio::carrega(int numBloco) {
     };
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
-    cout << "Carregando diretório do endereço " << ende << endl;
+
+    if (DEBUG) cout << "Carregando diretório do endereço " << ende << endl;
 
     ende += 2; // Pular o '\\' e 'D'
 
@@ -439,8 +443,10 @@ void Diretorio::salva() {
     };
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
-    cout << "Salvando o dir " << informacoes->nome << " na posição " << ende
-         << endl;
+
+    if (DEBUG)
+        cout << "Salvando o diretório " << informacoes->nome << " na posição "
+             << ende << endl;
 
     discoAtual[ende++] = '\\';
     discoAtual[ende++] = 'D';
@@ -549,21 +555,20 @@ void Diretorio::remove(Diretorio *dir) {
     auto porNome = [](ArquivoGenerico *arq, string nome) {
         return arq->informacoes->nome < nome;
     };
-    
-    for(Diretorio * subDir : dir->subDiretorio)
-        dir->remove(subDir);
 
-    for(Arquivo * subArq : dir->subArquivo)
-        dir->remove(subArq);
+    for (Diretorio *subDir : dir->subDiretorio) dir->remove(subDir);
+
+    for (Arquivo *subArq : dir->subArquivo) dir->remove(subArq);
 
     auto it = subArquivoInfo.begin();
-    for(; (*it) == dir->informacoes; it++);
+    for (; (*it) == dir->informacoes; it++)
+        ;
 
     subArquivoInfo.erase(it);
 
     auto iterDir = lower_bound(subDiretorio.begin(), subDiretorio.end(),
                                dir->informacoes->nome, porNome);
-    
+
     subDiretorio.erase(iterDir);
 
     delete (dir->informacoes);
@@ -578,13 +583,14 @@ void Diretorio::remove(Arquivo *arq) {
     };
 
     auto it = subArquivoInfo.begin();
-    for(; (*it) == arq->informacoes; it++);
+    for (; (*it) == arq->informacoes; it++)
+        ;
 
     subArquivoInfo.erase(it);
 
     auto iterArq = lower_bound(subArquivo.begin(), subArquivo.end(),
                                arq->informacoes->nome, porNome);
-    
+
     subArquivo.erase(iterArq);
 
     delete (arq->informacoes);
@@ -607,7 +613,9 @@ ArquivoGenerico *Diretorio::busca(string nomeArquivo) {
                                    nomeArquivo, comparaPorNome);
 
         if (iterArq == subArquivo.end() ||
-            (*iterArq)->informacoes->nome != nomeArquivo) return nullptr;            ;
+            (*iterArq)->informacoes->nome != nomeArquivo)
+            return nullptr;
+        ;
 
         return *iterArq;
     }
@@ -616,16 +624,16 @@ ArquivoGenerico *Diretorio::busca(string nomeArquivo) {
 
 bool Diretorio::buscaAbaixo(string caminho, string nomeAtual) {
     bool retorno = false;
-    string novoCaminho;    
-    
+    string novoCaminho;
+
     ArquivoGenerico *arq = busca(nomeAtual);
 
-    if(arq != nullptr){
+    if (arq != nullptr) {
         cout << caminho << "/" << arq->informacoes->nome << endl;
-        retorno = true;    
+        retorno = true;
     }
 
-    for (Diretorio *dir : subDiretorio){
+    for (Diretorio *dir : subDiretorio) {
         if (caminho.size() == 1)
             novoCaminho = caminho + dir->informacoes->nome;
         else
@@ -636,7 +644,7 @@ bool Diretorio::buscaAbaixo(string caminho, string nomeAtual) {
 }
 
 void Diretorio::libera() {
-    for (Diretorio * subDir : subDiretorio) {
+    for (Diretorio *subDir : subDiretorio) {
         subDir->libera();
         delete subDir;
     }
@@ -649,9 +657,7 @@ void Diretorio::libera() {
     subArquivo.clear();
 }
 
-Root::Root(){
-    informacoes = new ArquivoInfo();
-}
+Root::Root() { informacoes = new ArquivoInfo(); }
 
 Root::~Root() { }
 
@@ -688,7 +694,8 @@ void Root::carrega(int numBloco) {
     };
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
-    cout << "carregando root do endere" << ende << endl;
+
+    if (DEBUG) cout << "carregando / do endereço " << ende << endl;
 
     ende += 2; // Pular o '\\' e 'D'
 
@@ -705,12 +712,10 @@ void Root::carrega(int numBloco) {
     string aux = "";
     while (discoAtual[ende] != SEPARADOR) aux.push_back(discoAtual[ende++]);
     informacoes->nome = aux;
-    cout << aux << endl;
 
     ende++; // pula o SEPARADOR que indica o fim do nome
 
     while (discoAtual[ende] != SEPARADOR) {
-        cout << "entrando no while" << endl;
         ArquivoInfo *subArqInfo = new ArquivoInfo();
         subArquivoInfo.push_back(subArqInfo);
 
@@ -808,14 +813,13 @@ void Root::salva() {
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
 
-    cout << "Root: ende inicial = " << ende << endl;
-
     discoAtual[ende++] = '\\';
     discoAtual[ende++] = 'D';
 
     // Escrever os tempos criado, modificado e acessado
-    for (time_t tempo : { informacoes->tempoCriado, informacoes->tempoModificado,
-                          informacoes->tempoAcesso })
+    for (time_t tempo :
+         { informacoes->tempoCriado, informacoes->tempoModificado,
+           informacoes->tempoAcesso })
         escreveTempo(tempo);
 
     // Escrever o nome do diretório
@@ -887,8 +891,6 @@ void Root::salva() {
         discoAtual[ende++] = SEPARADOR;
     }
 
-    cout << "Root: ende final = " << ende << endl;
-
     for (Diretorio *subDir : subDiretorio) subDir->salva();
     for (Arquivo *subArq : subArquivo) subArq->salva();
 }
@@ -901,9 +903,9 @@ void FAT_t::carrega(int numBloco) {
     string aux;
     for (int j = 0, ende = TAM_BITMAP; j < NUM_BLOCOS; j++) {
         aux = "";
-        for (int k = 0; k < TAM_BLOCO; k++, ende++){
-            aux.push_back(discoAtual[ende]);            
-        }        
+        for (int k = 0; k < TAM_BLOCO; k++, ende++) {
+            aux.push_back(discoAtual[ende]);
+        }
         ponteiro[j] = stoi(aux);
     }
 }
@@ -911,19 +913,25 @@ void FAT_t::carrega(int numBloco) {
 void FAT_t::salva() {
     string aux;
     int ende = TAM_BITMAP;
-    cout << "FAT: ende inicial = " << ende << endl;
+
+    if (DEBUG) cout << "FAT: salvando começando no endereço " << ende << endl;
+
     for (int j = 0; j < NUM_BLOCOS; j++) {
-        aux = intParaString(ponteiro[j], TAM_BLOCO);        
+        aux = intParaString(ponteiro[j], TAM_BLOCO);
         for (int k = 0; k < TAM_BLOCO; k++, ende++) discoAtual[ende] = aux[k];
     }
     for (; ende < TAM_BITMAP + TAM_FAT; ende++) discoAtual[ende] = CHAR_NULO;
-    cout << "FAT: ende final = " << ende - 1 << endl;
+
+    if (DEBUG) cout << "FAT: último endereço salvo = " << ende - 1 << endl;
 }
 
 int FAT_t::alocaBloco() {
     try {
         int blocoLivre = Bitmap.pegaProxLivre();
-        cout << "bloco livre = " << blocoLivre << endl;
+
+        if (DEBUG)
+            cout << "FAT_t::alocaBloco(): alocando o bloco = " << blocoLivre
+                 << endl;
 
         Bitmap.livre[blocoLivre] = OCUPADO;
         Bitmap.blocosLivres--;
@@ -991,21 +999,25 @@ void Bitmap_t::carrega(int numBloco) {
 
 void Bitmap_t::salva() {
     int ende = 0;
-    cout << "Bitmap: ende inicial = 0" << endl;
+
+    if (DEBUG) cout << "Bitmap: salvando começando do endereço = 0" << endl;
+
     for (ende = 0; ende < NUM_BLOCOS; ende++)
         discoAtual[ende] = (char) livre[ende] + '0';
     for (; ende < TAM_BITMAP; ende++) discoAtual[ende] = CHAR_NULO;
-    cout << "Bitmap: ende final = " << TAM_BITMAP - 1 << endl;
+    if (DEBUG)
+        cout << "Bitmap: último endereço salvo = " << TAM_BITMAP - 1 << endl;
 }
 
 int Bitmap_t::pegaProxLivre() {
     int blocoInicial = proxLivre - 1;
-    cout << "bloco inicial = " << blocoInicial << endl;
     if (blocoInicial < 0) blocoInicial += NUM_BLOCOS;
 
-    cout << "livre[" << proxLivre << "] = " << livre[proxLivre] << endl;
+    if (DEBUG)
+        cout << "Bitmap_t::pegaProxLivre(): bloco inicial = " << blocoInicial
+             << endl;
+
     while (livre[proxLivre] == OCUPADO && proxLivre != blocoInicial) {
-        cout << "livre[" << proxLivre << "] = " << livre[proxLivre] << endl;
         proxLivre++;
         proxLivre %= NUM_BLOCOS;
     }

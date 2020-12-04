@@ -60,7 +60,7 @@ void cp() {
 
     Arquivo *novoArquivo = new Arquivo(nomeArq, str.str().size() + 2);
     novoArquivo->conteudo = str.str();
-    dirPai->adiciona(novoArquivo);    
+    dirPai->adiciona(novoArquivo);
 }
 
 void mkdir() {
@@ -83,15 +83,15 @@ void mkdir() {
 void rmdir() {
     string diretorio;
     cin >> diretorio;
-      
+
     Diretorio *dir = (Diretorio *) caminhoParaArquivo(diretorio);
 
     if (dir == nullptr) {
         cerr << "Caminho inexistente" << endl;
         return;
     }
-    
-    dir->informacoes->pai->remove(dir);    
+
+    dir->informacoes->pai->remove(dir);
 }
 
 void cat() {
@@ -99,11 +99,10 @@ void cat() {
     cin >> arquivo;
 
     Arquivo * arq = (Arquivo *)caminhoParaArquivo(arquivo);
-    
+
     if(arq == nullptr) return;
 
     cout << arq->conteudo << endl;
-    /* cout << arquivo << "\n"; */
 }
 
 void touch() {
@@ -142,7 +141,7 @@ void rm() {
         cerr << "Caminho inexistente" << endl;
         return;
     }
-    
+
     arq->informacoes->pai->remove(arq);
 }
 
@@ -166,7 +165,7 @@ void find() {
 
     dir = (Diretorio *) caminhoParaArquivo(diretorio);
 
-    if(dir == nullptr || !dir->buscaAbaixo(diretorio, arquivo))    
+    if(dir == nullptr || !dir->buscaAbaixo(diretorio, arquivo))
         cerr << "Arquivo não encontrado" << endl;
 }
 

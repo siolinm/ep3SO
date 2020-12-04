@@ -30,6 +30,8 @@ using namespace std;
 #define T_ACESSO 4
 #define T_TODOS T_MODIFICADO + T_CRIADO + T_ACESSO
 
+#define DEBUG true
+
 class Escrevivel {
   public:
     virtual void carrega(int) = 0;
@@ -122,7 +124,7 @@ class Diretorio : public ArquivoGenerico {
 };
 
 class Root : public Diretorio {
-  public:    
+  public:
     void inicializa();
     void carrega(int);
     void salva();
