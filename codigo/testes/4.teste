@@ -1,0 +1,4 @@
+mount sistema.disco
+rm /arq1mb
+umount
+sai

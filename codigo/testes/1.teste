@@ -1,0 +1,4 @@
+mount sistema.disco
+cp teste/arq1mb /arq1mb
+umount
+sai

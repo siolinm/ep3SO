@@ -1,0 +1,4 @@
+mount sistema.disco
+rmdir /profundoCom/
+umount
+sai
