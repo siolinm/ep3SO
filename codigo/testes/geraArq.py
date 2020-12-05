@@ -5,7 +5,7 @@ def geraArq(nome, tam):
     import random as rd
     import string as st
 
-    f = open(nome, "a")
+    f = open(nome, "w")
     for i in range(int(tam)):
         f.write(rd.choice(st.ascii_letters))
     f.close()

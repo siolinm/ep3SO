@@ -222,7 +222,7 @@ void find() {
 void df() {
     cout << "Quantidade de diretórios: " << qntDiretorios << endl;
     cout << "Quantidade de arquivos: " << qntArquivos << endl;
-    cout << "Espaço Livre: " << Bitmap.blocosLivres * UNI_ALOCACAO << endl;
+    cout << "Espaço Livre: " << bytesFormatados(Bitmap.blocosLivres * UNI_ALOCACAO) << endl;
     cout << "Espaço Desperdiçado: " << espacoDesperdicadoTotal << endl;
 }
 

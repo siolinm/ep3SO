@@ -583,16 +583,36 @@ void Diretorio::remove(Diretorio *dir) {
     auto porNome = [](ArquivoGenerico *arq, string nome) {
         return arq->informacoes->nome < nome;
     };
-
-    for (Diretorio *subDir : dir->subDiretorio){
+    
+    auto itDir = dir->subDiretorio.begin();
+    auto endDir = dir->subDiretorio.end();
+    while (itDir != endDir){
+        Diretorio * subDir = *itDir;
         cout << "Removendo subdiretório " + subDir->informacoes->nome << endl;
         dir->remove(subDir);
+        /* atualizar o iterador para o fim é necessário */
+        endDir = dir->subDiretorio.end();
     }
 
-    for (Arquivo *subArq : dir->subArquivo){
+    auto itArq = dir->subArquivo.begin();
+    auto endArq = dir->subArquivo.end();
+    while (itArq != endArq){
+        Arquivo * subArq = *itArq;
         cout << "Removendo subarquivo " + subArq->informacoes->nome << endl;
         dir->remove(subArq);
+        /* atualizar o iterador para o fim é necessário */
+        endArq = dir->subArquivo.end();
     }
+
+    // for (Diretorio *subDir : dir->subDiretorio){
+    //     cout << "Removendo subdiretório " + subDir->informacoes->nome << endl;
+    //     dir->remove(subDir);
+    // }
+
+    // for (Arquivo *subArq : dir->subArquivo){
+    //     cout << "Removendo subarquivo " + subArq->informacoes->nome << endl;
+    //     dir->remove(subArq);
+    // }
 
     auto it = subArquivoInfo.begin();
     for (; (*it) != dir->informacoes; it++)
