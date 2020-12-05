@@ -16,5 +16,6 @@ slides.synctex.gz
 *.tar.gz
 
 *.txt
+*.disco
 
 .vscode

@@ -43,9 +43,7 @@ int main() {
     while ((cin >> command) && command != EXIT) {
         try {
             parse(command);
-        } catch (string err) {
-            cerr << err << endl;
-        }
+        } catch (string err) { cerr << err << endl; }
         PROMPT;
     }
     cout << "\n";

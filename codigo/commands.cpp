@@ -161,8 +161,7 @@ void touch() {
 
         Arquivo *novoArquivo = new Arquivo(nomeArq);
         if (novoArquivo->informacoes->numPrimeiroBloco == BLOCO_INVALIDO) {
-            cerr << "O arquivo " << nomeArq << " não pôde ser criado."
-                 << endl;
+            cerr << "O arquivo " << nomeArq << " não pôde ser criado." << endl;
             delete novoArquivo;
             return;
         }
@@ -201,7 +200,7 @@ void ls() {
 
     Diretorio *dir = (Diretorio *) caminhoParaArquivo(diretorio);
 
-    cout << "   Size Tempo Criado  Tempo Modifi  Tempo Acesso  Name";
+    cout << "      Size Tempo Modifi  Name";
     cout << endl;
 
     for (ArquivoInfo *arqInfo : dir->subArquivoInfo) arqInfo->imprimeInfos();
@@ -222,8 +221,10 @@ void find() {
 void df() {
     cout << "Quantidade de diretórios: " << qntDiretorios << endl;
     cout << "Quantidade de arquivos: " << qntArquivos << endl;
-    cout << "Espaço Livre: " << bytesFormatados(Bitmap.blocosLivres * UNI_ALOCACAO) << endl;
-    cout << "Espaço Desperdiçado: " << espacoDesperdicadoTotal << endl;
+    cout << "Espaço Livre: " << Bitmap.blocosLivres * UNI_ALOCACAO << " bytes "
+         << endl;
+    cout << "Espaço Desperdiçado: " << espacoDesperdicadoTotal << " bytes "
+         << endl;
 }
 
 void umount() {

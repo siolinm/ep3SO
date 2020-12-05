@@ -371,5 +371,6 @@ cp testes/arq7kb /profundoCom/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/di
 cp testes/arq8kb /profundoCom/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/arq8kb
 cp testes/arq9kb /profundoCom/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/arq9kb
 cp testes/arq10kb /profundoCom/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/dir/arq10kb
+cp testes/completa30mb /completa30mb
 umount
 sai

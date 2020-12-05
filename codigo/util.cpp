@@ -166,11 +166,9 @@ void ArquivoInfo::imprimeInfos() {
     };
 
     cout << ehDiretorio << " ";
-    cout << setw(5)
-         << ((ehDiretorio == 'D') ? "-----" : bytesFormatados(tamanho)) << " ";
-    // TEMPORARIO: depois deixar apenas o tempo de última modificação
-    for (time_t *tempo : { &tempoCriado, &tempoModificado, &tempoAcesso })
-        imprimeTempo(tempo);
+    cout << setw(8) << setfill(' ')
+         << ((ehDiretorio == 'D') ? "--------" : to_string(tamanho)) << " ";
+    imprimeTempo(&tempoModificado);
 
     cout << nome << endl;
 }
@@ -236,9 +234,7 @@ void ArquivoGenerico::carrega(int numBloco) { }
 
 void ArquivoGenerico::salva() { }
 
-Arquivo::~Arquivo() {
-    qntArquivos--;
-}
+Arquivo::~Arquivo() { qntArquivos--; }
 
 Arquivo::Arquivo() : ArquivoGenerico() {
     qntArquivos++;
@@ -315,9 +311,7 @@ void Arquivo::salva() {
 
 Diretorio::Diretorio() : ArquivoGenerico() { qntDiretorios++; }
 
-Diretorio::~Diretorio(){
-    qntDiretorios--;
-}
+Diretorio::~Diretorio() { qntDiretorios--; }
 
 Diretorio::Diretorio(string nome) : ArquivoGenerico(nome) {
     qntDiretorios++;
@@ -583,11 +577,11 @@ void Diretorio::remove(Diretorio *dir) {
     auto porNome = [](ArquivoGenerico *arq, string nome) {
         return arq->informacoes->nome < nome;
     };
-    
+
     auto itDir = dir->subDiretorio.begin();
     auto endDir = dir->subDiretorio.end();
-    while (itDir != endDir){
-        Diretorio * subDir = *itDir;
+    while (itDir != endDir) {
+        Diretorio *subDir = *itDir;
         cout << "Removendo subdiretório " + subDir->informacoes->nome << endl;
         dir->remove(subDir);
         /* atualizar o iterador para o fim é necessário */
@@ -596,8 +590,8 @@ void Diretorio::remove(Diretorio *dir) {
 
     auto itArq = dir->subArquivo.begin();
     auto endArq = dir->subArquivo.end();
-    while (itArq != endArq){
-        Arquivo * subArq = *itArq;
+    while (itArq != endArq) {
+        Arquivo *subArq = *itArq;
         cout << "Removendo subarquivo " + subArq->informacoes->nome << endl;
         dir->remove(subArq);
         /* atualizar o iterador para o fim é necessário */
@@ -605,8 +599,8 @@ void Diretorio::remove(Diretorio *dir) {
     }
 
     // for (Diretorio *subDir : dir->subDiretorio){
-    //     cout << "Removendo subdiretório " + subDir->informacoes->nome << endl;
-    //     dir->remove(subDir);
+    //     cout << "Removendo subdiretório " + subDir->informacoes->nome <<
+    //     endl; dir->remove(subDir);
     // }
 
     // for (Arquivo *subArq : dir->subArquivo){
@@ -1005,7 +999,6 @@ int FAT_t::alocaBloco(int numPrimeiroBloco) {
     try {
         int bloco_livre = Bitmap.pegaProxLivre();
 
-        cout << numPrimeiroBloco << endl;
         while (ponteiro[numPrimeiroBloco] != BLOCO_NULO)
             numPrimeiroBloco = ponteiro[numPrimeiroBloco];
 
@@ -1026,9 +1019,9 @@ void FAT_t::liberaBlocos(int numBloco) {
     int prox;
 
     while (numBloco != BLOCO_NULO) {
-
-        if(DEBUG){
-            cout << "FAT_t::liberaBlocos(): Liberando bloco " << numBloco << " ..." << endl;
+        if (DEBUG) {
+            cout << "FAT_t::liberaBlocos(): Liberando bloco " << numBloco
+                 << " ..." << endl;
         }
 
         prox = FAT.ponteiro[numBloco];
