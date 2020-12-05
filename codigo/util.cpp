@@ -401,11 +401,19 @@ void Diretorio::carrega(int numBloco) {
 
         // Pegar o nome na heap
         int enderecoPonteiro = subArqInfo->ptNome;
+        int auxNumBloco, auxBase, auxLimite;
+        auxNumBloco = enderecoEmBloco(enderecoPonteiro);
+        blocoEmBaseLimite(auxNumBloco, auxBase, auxLimite);
         aux = "";
-        pulaBloco();
-        for (; discoAtual[enderecoPonteiro] != SEPARADOR;
-             enderecoPonteiro++, pulaBloco())
+        for (; discoAtual[enderecoPonteiro] != SEPARADOR;) {
             aux.push_back(discoAtual[enderecoPonteiro]);
+            enderecoPonteiro++;
+            if (enderecoPonteiro == auxLimite) {
+                auxNumBloco = FAT.ponteiro[auxNumBloco];
+                enderecoPonteiro =
+                    blocoEmBaseLimite(auxNumBloco, auxBase, auxLimite);
+            }
+        }
         subArqInfo->nome = aux;
 
         subArqInfo->pai = this;
@@ -428,12 +436,15 @@ void Diretorio::salva() {
     int numBloco = informacoes->numPrimeiroBloco;
 
     auto alocaaux = [&ende, &numBloco, &base, &limite]() {
-        if (ende == limite) {
+        if (ende >= limite) {
             if (FAT.ponteiro[numBloco] == BLOCO_NULO) {
                 // preciso alocar um novo bloco
                 numBloco = FAT.alocaBloco(numBloco);
                 if (numBloco == BLOCO_INVALIDO)
                     throw string("Memória insuficiente");
+            } else {
+                // pulo para o próximo bloco
+                numBloco = FAT.ponteiro[numBloco];
             }
             ende = blocoEmBaseLimite(numBloco, base, limite);
         }
@@ -501,12 +512,18 @@ void Diretorio::salva() {
         enderecoPonteiro = fila.front();
         fila.pop();
 
+        int auxBloco, auxBase, auxLimite;
+        auxBloco = enderecoEmBloco(enderecoPonteiro);
+        blocoEmBaseLimite(auxBloco, auxBase, auxLimite);
+
         // Voltar no ponteiro e fazer ele apontar para o começo do nome
+        alocaaux();
         string aux = intParaString(ende, TAM_ENDERECO);
         for (int i = 0; i < TAM_ENDERECO; i++, enderecoPonteiro++) {
-            if (enderecoPonteiro == limite) {
-                numBloco = FAT.ponteiro[numBloco];
-                enderecoPonteiro = blocoEmBaseLimite(numBloco, base, limite);
+            if (enderecoPonteiro == auxLimite) {
+                auxBloco = FAT.ponteiro[auxBloco];
+                enderecoPonteiro =
+                    blocoEmBaseLimite(auxBloco, auxBase, auxLimite);
             }
             discoAtual[enderecoPonteiro] = aux[i];
         }
@@ -818,11 +835,19 @@ void Root::carrega(int numBloco) {
 
         // Pegar o nome na heap
         int enderecoPonteiro = subArqInfo->ptNome;
+        int auxNumBloco, auxBase, auxLimite;
+        auxNumBloco = enderecoEmBloco(enderecoPonteiro);
+        blocoEmBaseLimite(auxNumBloco, auxBase, auxLimite);
         aux = "";
-        pulaBloco();
-        for (; discoAtual[enderecoPonteiro] != SEPARADOR;
-             enderecoPonteiro++, pulaBloco())
+        for (; discoAtual[enderecoPonteiro] != SEPARADOR;) {
             aux.push_back(discoAtual[enderecoPonteiro]);
+            enderecoPonteiro++;
+            if (enderecoPonteiro == auxLimite) {
+                auxNumBloco = FAT.ponteiro[auxNumBloco];
+                enderecoPonteiro =
+                    blocoEmBaseLimite(auxNumBloco, auxBase, auxLimite);
+            }
+        }
         subArqInfo->nome = aux;
 
         subArqInfo->pai = this;
@@ -842,10 +867,15 @@ void Root::salva() {
     int numBloco = 0;
 
     auto alocaaux = [&ende, &numBloco, &base, &limite]() {
-        if (ende == limite) {
-            if ((numBloco = FAT.ponteiro[numBloco]) == BLOCO_NULO) {
+        if (ende >= limite) {
+            if (FAT.ponteiro[numBloco] == BLOCO_NULO) {
                 // preciso alocar um novo bloco
                 numBloco = FAT.alocaBloco(numBloco);
+                if (numBloco == BLOCO_INVALIDO)
+                    throw string("Memória insuficiente");
+            } else {
+                // pulo para o próximo bloco
+                numBloco = FAT.ponteiro[numBloco];
             }
             ende = blocoEmBaseLimite(numBloco, base, limite);
         }
@@ -863,6 +893,10 @@ void Root::salva() {
     };
 
     ende = blocoEmBaseLimite(numBloco, base, limite);
+
+    if (DEBUG)
+        cout << "Salvando o diretório " << informacoes->nome << " na posição "
+             << ende << endl;
 
     // Escrever os tempos criado, modificado e acessado
     for (time_t tempo :
@@ -920,12 +954,18 @@ void Root::salva() {
         enderecoPonteiro = fila.front();
         fila.pop();
 
+        int auxBloco, auxBase, auxLimite;
+        auxBloco = enderecoEmBloco(enderecoPonteiro);
+        blocoEmBaseLimite(auxBloco, auxBase, auxLimite);
+
         // Voltar no ponteiro e fazer ele apontar para o começo do nome
+        alocaaux();
         string aux = intParaString(ende, TAM_ENDERECO);
         for (int i = 0; i < TAM_ENDERECO; i++, enderecoPonteiro++) {
-            if (enderecoPonteiro == limite) {
-                numBloco = FAT.ponteiro[numBloco];
-                enderecoPonteiro = blocoEmBaseLimite(numBloco, base, limite);
+            if (enderecoPonteiro == auxLimite) {
+                auxBloco = FAT.ponteiro[auxBloco];
+                enderecoPonteiro =
+                    blocoEmBaseLimite(auxBloco, auxBase, auxLimite);
             }
             discoAtual[enderecoPonteiro] = aux[i];
         }
@@ -997,17 +1037,21 @@ int FAT_t::alocaBloco() {
 
 int FAT_t::alocaBloco(int numPrimeiroBloco) {
     try {
-        int bloco_livre = Bitmap.pegaProxLivre();
+        int blocoLivre = Bitmap.pegaProxLivre();
+
+        if (DEBUG)
+            cout << "FAT_t::alocaBloco(): alocando o bloco = " << blocoLivre
+                 << endl;
 
         while (ponteiro[numPrimeiroBloco] != BLOCO_NULO)
             numPrimeiroBloco = ponteiro[numPrimeiroBloco];
 
-        ponteiro[numPrimeiroBloco] = bloco_livre;
-        Bitmap.livre[bloco_livre] = OCUPADO;
+        ponteiro[numPrimeiroBloco] = blocoLivre;
+        Bitmap.livre[blocoLivre] = OCUPADO;
         Bitmap.blocosLivres--;
-        ponteiro[bloco_livre] = BLOCO_NULO;
+        ponteiro[blocoLivre] = BLOCO_NULO;
 
-        return bloco_livre;
+        return blocoLivre;
     } catch (string erro) {
         cerr << "Erro ao alocar um bloco de memória:\n" << erro << endl;
         return BLOCO_INVALIDO;
