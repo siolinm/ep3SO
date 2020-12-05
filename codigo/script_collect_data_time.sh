@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DIR=testes/tempos
+
 rm data.csv
 
 # sistema_de_arquivos.operacao
@@ -7,7 +9,7 @@ echo "1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 3.1, 3.2, 3.2, 3.3,
 for k in {1..30}; do
     j=1
     for i in {1..3}; do
-        { cat tempo-$i-$j-$k.txt | grep real | sed 's/m/ /' | sed 's/s//' | sed 's/,/./' | awk '{printf "%d", (60*$2) + $3}' | sed 's/,/./'
+        { cat $DIR/tempo-$i-$j-$k.txt | grep real | sed 's/0m//' | sed 's/s//' | sed 's/,/./' | sed 's/real//' | sed 's/\s*//' | sed -z 's/\n//'
         } >> data.csv
         echo -n "," >> data.csv
         echo $i-$j-$k
@@ -15,7 +17,7 @@ for k in {1..30}; do
 
     for j in {2..3}; do
         for i in {1..8}; do
-            { cat tempo-$i-$j-$k.txt | grep real | sed 's/m/ /' | sed 's/s//' | sed 's/,/./' | awk '{printf "%d", (60*$2) + $3}' | sed 's/,/./'
+            { cat $DIR/tempo-$i-$j-$k.txt | grep real | sed 's/0m//' | sed 's/s//' | sed 's/,/./' | sed 's/real//' | sed 's/\s*//' | sed -z 's/[\n]//'
             } >> data.csv
             echo -n "," >> data.csv
             echo $i-$j-$k
