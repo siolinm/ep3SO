@@ -5,6 +5,7 @@ import scipy.stats
 
 # %% New ipython cell ================
 
+
 def mean_confidence_interval(data, confidence=0.95):
     a = 1.0 * np.array(data)
     n = len(a)
@@ -13,6 +14,7 @@ def mean_confidence_interval(data, confidence=0.95):
     return m, h
 
 # %% New ipython cell ================
+
 
 df = pd.read_csv("./data.csv", delimiter=',')
 

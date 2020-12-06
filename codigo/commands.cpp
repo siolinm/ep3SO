@@ -5,6 +5,10 @@
 #include <iomanip>
 #include <sstream>
 
+#include "arquivo.hpp"
+#include "bitmap.hpp"
+#include "diretorio.hpp"
+#include "fat.hpp"
 #include "util.hpp"
 
 void mount() {

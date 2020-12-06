@@ -4,6 +4,7 @@
 #include <iomanip>
 
 #include "commands.hpp"
+#include "diretorio.hpp"
 #include "util.hpp"
 
 using namespace std;
