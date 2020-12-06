@@ -102,4 +102,3 @@ void divideEmArquivoECaminho(string &caminho, string &nome) {
 
     reverse(nome.begin(), nome.end());
 }
-
