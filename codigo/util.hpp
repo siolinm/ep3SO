@@ -24,7 +24,7 @@ using namespace std;
 #define T_ACESSO 4
 #define T_TODOS T_MODIFICADO + T_CRIADO + T_ACESSO
 
-#define DEBUG true
+#define DEBUG false
 
 class Escrevivel {
   public:

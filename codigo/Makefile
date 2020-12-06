@@ -39,4 +39,5 @@ tar:
 
 
 clean:
-	rm *.o ep3 *~
+	rm *.o ep3 *~ *.disco
+
