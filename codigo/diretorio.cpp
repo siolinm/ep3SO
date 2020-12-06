@@ -314,16 +314,6 @@ void Diretorio::remove(Diretorio *dir) {
         endArq = dir->subArquivo.end();
     }
 
-    // for (Diretorio *subDir : dir->subDiretorio){
-    //     cout << "Removendo subdiretório " + subDir->informacoes->nome <<
-    //     endl; dir->remove(subDir);
-    // }
-
-    // for (Arquivo *subArq : dir->subArquivo){
-    //     cout << "Removendo subarquivo " + subArq->informacoes->nome << endl;
-    //     dir->remove(subArq);
-    // }
-
     auto it = subArquivoInfo.begin();
     for (; (*it) != dir->informacoes; it++)
         ;
@@ -416,9 +406,8 @@ void Diretorio::libera() {
         subDir->libera();
         delete subDir;
     }
-    subDiretorio.clear();
 
-    // for (ArquivoInfo *arqInfo : subArquivoInfo) delete arqInfo;
+    subDiretorio.clear();
     subArquivoInfo.clear();
 
     for (Arquivo *arq : subArquivo) delete arq;

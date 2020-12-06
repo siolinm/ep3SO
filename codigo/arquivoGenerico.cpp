@@ -65,8 +65,6 @@ void ArquivoInfo::imprimeInfos() {
     cout << nome << endl;
 }
 
-ArquivoGenerico::~ArquivoGenerico() { delete (informacoes); }
-
 ArquivoGenerico::ArquivoGenerico() { informacoes = nullptr; }
 
 ArquivoGenerico::ArquivoGenerico(string nome) {
@@ -76,6 +74,8 @@ ArquivoGenerico::ArquivoGenerico(string nome) {
 ArquivoGenerico::ArquivoGenerico(string nome, int tamanho) {
     informacoes = new ArquivoInfo(nome, tamanho);
 }
+
+ArquivoGenerico::~ArquivoGenerico() { delete (informacoes); }
 
 ArquivoGenerico *caminhoParaArquivo(string caminho) {
     Diretorio *atual = &root;
@@ -109,12 +109,6 @@ ArquivoGenerico *caminhoParaArquivo(string caminho) {
     }
 
     retorn = atual->busca(nomeAtual);
-
-    if (retorn == nullptr) {
-        // cerr << "ERRO: Arquivo não encontrado!" << endl;
-        // cerr << "Retornando arquivo nulo!" << endl;
-        return nullptr;
-    }
 
     return retorn;
 }

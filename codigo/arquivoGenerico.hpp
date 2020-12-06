@@ -1,9 +1,8 @@
 #ifndef _ARQUIVO_GENERICO_H
-#define _ARQUIVO_GENERICO_H value
+#define _ARQUIVO_GENERICO_H
 
 #include <bits/types/time_t.h>
 
-#include <ctime>
 #include <string>
 
 #include "util.hpp"
@@ -20,7 +19,7 @@ class ArquivoInfo {
     time_t tempoAcesso;     // Tempo de último acesso ao arquivo
     int numPrimeiroBloco;   // Número do bloco cabeça do arquivo
     Diretorio *pai;         // Ponteiro para o diretório pai
-    int espacoDesperdicado;
+    int espacoDesperdicado; // Espaço disperdiçãdo por esse arquivo
 
     ArquivoInfo();
     ArquivoInfo(string);
@@ -48,11 +47,10 @@ class ArquivoGenerico : public Escrevivel {
     ArquivoGenerico();
     ArquivoGenerico(string);
     ArquivoGenerico(string, int);
+    virtual ~ArquivoGenerico();
 
     virtual void carrega(int);
     virtual void salva();
-
-    virtual ~ArquivoGenerico();
 };
 
 #endif /* ifndef _ARQUIVO_GENERICO_H */

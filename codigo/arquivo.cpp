@@ -2,8 +2,6 @@
 
 #include "fat.hpp"
 
-Arquivo::~Arquivo() { qntArquivos--; }
-
 Arquivo::Arquivo() : ArquivoGenerico() {
     qntArquivos++;
     conteudo = "";
@@ -32,6 +30,8 @@ Arquivo::Arquivo(string nome, int tamanho) : ArquivoGenerico(nome, tamanho) {
         tamanho -= 4000;
     }
 }
+
+Arquivo::~Arquivo() { qntArquivos--; }
 
 void Arquivo::carrega(int numBloco) {
     // Base e limite para o bloco que estamos atualmente carregando

@@ -12,29 +12,28 @@ using namespace std;
 #define PROMPT cout << "[ep3]: ";
 
 void parse(string &command) {
-    if (command == MOUNT) {
+    if (command == MOUNT)
         mount();
-    } else if (command == COPY) {
+    else if (command == COPY)
         cp();
-    } else if (command == MKDIR) {
+    else if (command == MKDIR)
         mkdir();
-    } else if (command == RMDIR) {
+    else if (command == RMDIR)
         rmdir();
-    } else if (command == CAT) {
+    else if (command == CAT)
         cat();
-    } else if (command == TOUCH) {
+    else if (command == TOUCH)
         touch();
-    } else if (command == RM) {
+    else if (command == RM)
         rm();
-    } else if (command == LS) {
+    else if (command == LS)
         ls();
-    } else if (command == FIND) {
+    else if (command == FIND)
         find();
-    } else if (command == DF) {
+    else if (command == DF)
         df();
-    } else if (command == UMOUNT) {
+    else if (command == UMOUNT)
         umount();
-    }
 }
 
 int main() {

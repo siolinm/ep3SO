@@ -139,7 +139,10 @@ void cat() {
 
     Arquivo *arq = (Arquivo *) caminhoParaArquivo(arquivo);
 
-    if (arq == nullptr) return;
+    if (arq == nullptr) {
+        cerr << "Caminho inexistente" << endl;
+        return;
+    }
 
     cout << arq->conteudo << endl;
 }
@@ -203,6 +206,11 @@ void ls() {
     cin >> diretorio;
 
     Diretorio *dir = (Diretorio *) caminhoParaArquivo(diretorio);
+
+    if (dir == nullptr) {
+        cerr << "Caminho inexistente" << endl;
+        return;
+    }
 
     cout << "      Size Tempo Modifi  Name";
     cout << endl;

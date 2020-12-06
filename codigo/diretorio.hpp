@@ -16,19 +16,21 @@ class Diretorio : public ArquivoGenerico {
     Diretorio();
     Diretorio(string);
     Diretorio(string, int);
+    ~Diretorio();
 
     virtual void carrega(int);
     virtual void salva();
+    void salvaTudo();
+
     void adiciona(Arquivo *);
     void adiciona(Diretorio *);
     void remove(Arquivo *);
     void remove(Diretorio *);
+
     ArquivoGenerico *busca(string);
     bool buscaAbaixo(string, string);
-    void libera();
-    void salvaTudo();
 
-    ~Diretorio();
+    void libera();
 };
 
 class Root : public Diretorio {
