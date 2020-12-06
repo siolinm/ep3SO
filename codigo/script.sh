@@ -4,6 +4,8 @@ DIR=testes
 DIR_RELATORIO=$DIR/relatorios
 DIR_TEMPO=$DIR/tempos
 
+make clean
+
 echo "Gerando arquivo arq1mb..."
 python3 $DIR/geraArq.py $DIR/arq1mb 1000000
 echo "Gerando arquivo arq10mb..."

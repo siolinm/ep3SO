@@ -17,7 +17,7 @@ slides.synctex.gz
 
 *.txt
 *.disco
-./codigo/testes/arq*
-./codigo/testes/completa*
+codigo/testes/arq*
+codigo/testes/completa*
 
 .vscode
