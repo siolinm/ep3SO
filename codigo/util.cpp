@@ -583,7 +583,7 @@ void Diretorio::remove(Diretorio *dir) {
     auto porNome = [](ArquivoGenerico *arq, string nome) {
         return arq->informacoes->nome < nome;
     };
-    
+
     auto itDir = dir->subDiretorio.begin();
     auto endDir = dir->subDiretorio.end();
     while (itDir != endDir){
