@@ -420,7 +420,8 @@ void Diretorio::libera() {
 
 Root::Root() { informacoes = new ArquivoInfo(); }
 
-Root::~Root() { }
+Root::~Root() {
+}
 
 void Root::inicializa() {
     informacoes->nome = "/";
@@ -430,7 +431,7 @@ void Root::inicializa() {
     informacoes->pai = nullptr;
     informacoes->tamanho = 0;
     informacoes->numPrimeiroBloco = 0;
-    informacoes->espacoDesperdicado = 0; // isso é mudado no futuro, ao salvar
+    informacoes->espacoDesperdicado = UNI_ALOCACAO; // isso é mudado no futuro, ao salvar
     Bitmap.livre[0] = OCUPADO;
     Bitmap.blocosLivres--;
     FAT.ponteiro[0] = BLOCO_NULO;

@@ -39,6 +39,11 @@ void mount() {
     discoAtual = buffer.str();
     arquivo.close();
 
+    qntDiretorios = 1;
+    qntArquivos = 0;
+    espacoDesperdicadoTotal = 3968;
+    root.informacoes->espacoDesperdicado = espacoDesperdicadoTotal;
+
     // Criamos a árvore de arquivos na memória principal
     Bitmap.carrega(0);
     FAT.carrega(0);

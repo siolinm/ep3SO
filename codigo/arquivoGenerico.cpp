@@ -77,7 +77,10 @@ ArquivoGenerico::ArquivoGenerico(string nome, int tamanho) {
     informacoes = new ArquivoInfo(nome, tamanho);
 }
 
-ArquivoGenerico::~ArquivoGenerico() { delete (informacoes); }
+ArquivoGenerico::~ArquivoGenerico() {
+    espacoDesperdicadoTotal -= this->informacoes->espacoDesperdicado;
+    delete (informacoes);
+}
 
 ArquivoGenerico *caminhoParaArquivo(string caminho) {
     Diretorio *atual = &root;
