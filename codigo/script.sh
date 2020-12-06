@@ -34,24 +34,24 @@ if [ ! -d "$DIR_RELATORIO" ]; then
     mkdir $DIR_RELATORIO
 fi
 
-for i in {1..3}; do
-    j=1
-    for k in {1..30}; do
-        echo "Realizando teste ${k} da operacao ${i}, com sistema de arquivos ${j}..."
-        cp $j.disco sistema.disco
-        { time ./ep3 < $DIR/$i.teste >$DIR_RELATORIO/relatorio-$i-$j-$k.txt
-        } 2> $DIR_TEMPO/tempo-$i-$j-$k.txt
-    done
-done
+# for i in {1..3}; do
+    # j=1
+    # for k in {1..30}; do
+        # echo "Realizando teste ${k} da operacao ${i}, com sistema de arquivos ${j}..."
+        # cp $j.disco sistema.disco
+        # { time ./ep3 < $DIR/$i.teste >$DIR_RELATORIO/relatorio-$i-$j-$k.txt
+        # } 2> $DIR_TEMPO/tempo-$i-$j-$k.txt
+    # done
+# done
 
-for i in {1..8}; do
-    for j in {2..3}; do
-        for k in {1..30}; do
-            echo "Realizando teste ${k} da operacao ${i}, com sistema de arquivos ${j}..."
-            cp $j.disco sistema.disco
-            { time ./ep3 < $DIR/$i.teste >$DIR_RELATORIO/relatorio-$i-$j-$k.txt
+for j in {1..3}; do
+    for k in {1..30}; do
+        cp $j.disco sistema.disco
+        for i in {1..8}; do
+            echo "Realizando teste $k, com sistema de arquivos $j e operacao $i..."
+            { time ./ep3 < $DIR/$i.teste > /dev/null
             } 2> $DIR_TEMPO/tempo-$i-$j-$k.txt
         done
     done
 done
-rm sistema.disco
+rm *.disco
