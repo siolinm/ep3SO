@@ -11,7 +11,8 @@ ArquivoInfo::ArquivoInfo() {
     nome = "";
     ptNome = 0;
     ehDiretorio = '0';
-    espacoDesperdicado = 0;
+    espacoDesperdicado = UNI_ALOCACAO - (tamanho % UNI_ALOCACAO);
+    espacoDesperdicadoTotal += espacoDesperdicado;
 }
 
 ArquivoInfo::ArquivoInfo(string nome) {
@@ -21,7 +22,8 @@ ArquivoInfo::ArquivoInfo(string nome) {
     this->nome = nome;
     ptNome = 0;
     ehDiretorio = '0';
-    espacoDesperdicado = 0;
+    espacoDesperdicado = UNI_ALOCACAO - (tamanho % UNI_ALOCACAO);
+    espacoDesperdicadoTotal += espacoDesperdicado;
 }
 
 ArquivoInfo::ArquivoInfo(string nome, int tamanho) {

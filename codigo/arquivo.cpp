@@ -50,6 +50,10 @@ void Arquivo::carrega(int numBloco) {
         numBloco = FAT.ponteiro[numBloco]; // próximo bloco
         ende = blocoEmBaseLimite(numBloco, base, limite);
     }
+
+    espacoDesperdicadoTotal -= informacoes->espacoDesperdicado;
+    informacoes->espacoDesperdicado = limite - ende;
+    espacoDesperdicadoTotal += informacoes->espacoDesperdicado;
 }
 
 void Arquivo::salva() {

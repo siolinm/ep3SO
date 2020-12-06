@@ -118,6 +118,7 @@ void Diretorio::carrega(int numBloco) {
         subArqInfo->pai = this;
     }
 
+    espacoDesperdicadoTotal -= informacoes->espacoDesperdicado;
     informacoes->espacoDesperdicado = limite - ende;
     espacoDesperdicadoTotal += informacoes->espacoDesperdicado;
 
@@ -387,7 +388,10 @@ bool Diretorio::buscaAbaixo(string caminho, string nomeAtual) {
     ArquivoGenerico *arq = busca(nomeAtual);
 
     if (arq != nullptr) {
-        cout << caminho << "/" << arq->informacoes->nome << endl;
+        if (caminho.size() == 1)
+            cout << caminho << arq->informacoes->nome << endl;
+        else
+            cout << caminho << "/" << arq->informacoes->nome << endl;
         retorno = true;
     }
 
@@ -540,6 +544,10 @@ void Root::carrega(int numBloco) {
 
         subArqInfo->pai = this;
     }
+
+    espacoDesperdicadoTotal -= informacoes->espacoDesperdicado;
+    informacoes->espacoDesperdicado = limite - ende;
+    espacoDesperdicadoTotal += informacoes->espacoDesperdicado;
 
     auto porNome = [](ArquivoGenerico *a1, ArquivoGenerico *a2) {
         return a1->informacoes->nome < a2->informacoes->nome;

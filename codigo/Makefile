@@ -1,11 +1,10 @@
 DIRNAME    = ep3-lucas-marcos
 EPOBJS     = ep3.o util.o commands.o arquivoGenerico.o arquivo.o diretorio.o bitmap.o fat.o
-CFLAGS     = -Wall -g -pedantic -Wno-unused-result -fsanitize=address
+CFLAGS     = -Wall -g -pedantic -Wno-unused-result
 COMPILER   = g++
 LIBS_EP3   = # -lpthread
 
 default: ep3
-	# [ ! -f ./test.txt ] || rm ./test.txt
 
 ep3: $(EPOBJS)
 	$(COMPILER) $(CFLAGS) $(EPOBJS) -o ep3 $(LIBS_EP3)
