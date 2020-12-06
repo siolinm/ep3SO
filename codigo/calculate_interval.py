@@ -21,3 +21,4 @@ df = pd.read_csv("./data.csv", delimiter=',')
 for column_name in df.columns:
     mh = mean_confidence_interval(df[column_name])
     print(f"para {column_name} temos media = {mh[0]} e intervalo = {mh[1]}")
+    print(f"(aux, {mh[0]}) += (0,{mh[1]}) -= (0,{mh[1]})")

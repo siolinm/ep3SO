@@ -196,6 +196,7 @@
             alteração de tempo dos arquivos.} \label{tabela}
         \end{table}
     \end{frame}
+
     \begin{frame}{Detalhes de Implementação - os comandos}
         \begin{itemize}
             \justifying
@@ -210,6 +211,7 @@
                 três tempos para o arquivo recém-criado.
         \end{itemize}
     \end{frame}
+
     \begin{frame}{Detalhes de Implementação - os comandos}
         \begin{itemize}
             \justifying
@@ -224,7 +226,25 @@
                 apenas seu nome.
         \end{itemize}
     \end{frame}
+
     \section{Experimentos}
+    \begin{frame}{Experimentos - Observações iniciais}
+        Realizamos os testes seguindo as etapas:
+        \begin{itemize}
+            \justifying
+            \item Inicializamos o sistema de arquivos conforme necessitado
+                (vazio, 10MB, 50MB);
+            \item Fixado o sistema de arquivos, realizamos as operações em
+                ordem, salvando o tempo de cada uma após sua execução;
+            \item Para executar uma operação, chamamos \texttt{mount} no
+                sistema, a executamos e salvamos ela em disco com
+                \texttt{umount} e capturamos o tempo de execução com
+                \texttt{time} do \texttt{bash};
+        \end{itemize}
+        Assim sendo, o sistema de arquivos não é exatamente o mesmo no começo de
+        cada operação, pois o resultado das operações anteriores ficou salvo.
+    \end{frame}
+
     \begin{frame}{Experimentos - Sistema de arquivos vazio}
 \begin{tikzpicture}
                 \begin{axis}[
@@ -234,8 +254,7 @@
                         ybar=2*\pgflinewidth,
                         bar width=25pt,
                         ymajorgrids = true,
-                        symbolic x coords={Sistema de arquivos com \texttt{10MB}
-                        ocupado},
+                        symbolic x coords={Sistema de arquivos vazio},
                         xtick = data,
                         xticklabel pos=right,
                         scaled y ticks = false,
@@ -253,8 +272,7 @@
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.985)
-                        += (0,0.049) -= (0,0.049)
+                        (Sistema de arquivos vazio, 0.8853333333333334) += (0,0.02595778558024465) -= (0,0.02595778558024465)
                     };
 
                     \addplot[style={fill=blue},
@@ -262,8 +280,7 @@
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.583)
-                        += (0,0.016) -= (0,0.016)
+                        (Sistema de arquivos vazio, 0.9047999999999999) += (0,0.056439206590596584) -= (0,0.056439206590596584)
                     };
 
                     \addplot[style={fill=green},
@@ -271,8 +288,7 @@
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos vazio, 0.8555666666666668) += (0,0.03031087265297527) -= (0,0.03031087265297527)
                     };
 
                     \addplot[style={fill=yellow},
@@ -280,8 +296,7 @@
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos vazio, 0.8824333333333334) += (0,0.03186171263209405) -= (0,0.03186171263209405)
                     };
 
                     \addplot[style={fill=orange},
@@ -289,32 +304,31 @@
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos vazio, 0.8532) += (0,0.02341866214675493) -= (0,0.02341866214675493)
                     };
+
                     \addplot[style={fill=purple},
                     error bars/.cd,
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos vazio, 0.8994666666666666) += (0,0.06373270507842371) -= (0,0.06373270507842371)
                     };
-                    \addplot[style={fill=black},
+
+                    \addplot[style={fill=white},
                     error bars/.cd,
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos vazio, 0.8942) += (0,0.06656332736164362) -= (0,0.06656332736164362)
                     };
+
                     \addplot[style={fill=brown},
                     error bars/.cd,
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos vazio, 0.9133) += (0,0.04467808448400404) -= (0,0.04467808448400404)
                     };
 
                 \legend{Operação 1, Operação 2, Operação 3, Operação 4, Operação
@@ -331,8 +345,7 @@
                         ybar=2*\pgflinewidth,
                         bar width=25pt,
                         ymajorgrids = true,
-                        symbolic x coords={Sistema de arquivos com \texttt{10MB}
-                        ocupado},
+                        symbolic x coords={Sistema de arquivos com \texttt{10MB} ocupados},
                         xtick = data,
                         xticklabel pos=right,
                         scaled y ticks = false,
@@ -350,8 +363,7 @@
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.985)
-                        += (0,0.049) -= (0,0.049)
+                        (Sistema de arquivos com \texttt{10MB} ocupados, 1.6449333333333334) += (0,0.04293604361366569) -= (0,0.04293604361366569)
                     };
 
                     \addplot[style={fill=blue},
@@ -359,8 +371,7 @@
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.583)
-                        += (0,0.016) -= (0,0.016)
+                        (Sistema de arquivos com \texttt{10MB} ocupados, 1.6056000000000004) += (0,0.037195424075949876) -= (0,0.037195424075949876)
                     };
 
                     \addplot[style={fill=green},
@@ -368,8 +379,7 @@
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos com \texttt{10MB} ocupados, 1.6001333333333332) += (0,0.023781569663101743) -= (0,0.023781569663101743)
                     };
 
                     \addplot[style={fill=yellow},
@@ -377,8 +387,7 @@
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos com \texttt{10MB} ocupados, 1.5977666666666663) += (0,0.023380707847622938) -= (0,0.023380707847622938)
                     };
 
                     \addplot[style={fill=orange},
@@ -386,32 +395,31 @@
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos com \texttt{10MB} ocupados, 1.6177333333333332) += (0,0.025500627947340575) -= (0,0.025500627947340575)
                     };
+
                     \addplot[style={fill=purple},
                     error bars/.cd,
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos com \texttt{10MB} ocupados, 1.6184333333333336) += (0,0.02378984723037801) -= (0,0.02378984723037801)
                     };
-                    \addplot[style={fill=black},
+
+                    \addplot[style={fill=white},
                     error bars/.cd,
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos com \texttt{10MB} ocupados, 1.6125333333333332) += (0,0.017830096402122783) -= (0,0.017830096402122783)
                     };
+
                     \addplot[style={fill=brown},
                     error bars/.cd,
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos com \texttt{10MB} ocupados, 1.5704999999999996) += (0,0.021161643961972024) -= (0,0.021161643961972024)
                     };
 
                 \legend{Operação 1, Operação 2, Operação 3, Operação 4, Operação
@@ -428,8 +436,7 @@
                         ybar=2*\pgflinewidth,
                         bar width=25pt,
                         ymajorgrids = true,
-                        symbolic x coords={Sistema de arquivos com \texttt{10MB}
-                        ocupado},
+                        symbolic x coords={Sistema de arquivos com \texttt{50MB} ocupados},
                         xtick = data,
                         xticklabel pos=right,
                         scaled y ticks = false,
@@ -447,8 +454,7 @@
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.985)
-                        += (0,0.049) -= (0,0.049)
+                        (Sistema de arquivos com \texttt{50MB} ocupados, 4.9243999999999994) += (0,0.04773444251239711) -= (0,0.04773444251239711)
                     };
 
                     \addplot[style={fill=blue},
@@ -456,8 +462,7 @@
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.583)
-                        += (0,0.016) -= (0,0.016)
+                        (Sistema de arquivos com \texttt{50MB} ocupados, 4.886500000000001) += (0,0.05134719477640183) -= (0,0.05134719477640183)
                     };
 
                     \addplot[style={fill=green},
@@ -465,8 +470,7 @@
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos com \texttt{50MB} ocupados, 4.902833333333333) += (0,0.04610089843517922) -= (0,0.04610089843517922)
                     };
 
                     \addplot[style={fill=yellow},
@@ -474,8 +478,7 @@
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos com \texttt{50MB} ocupados, 4.888266666666666) += (0,0.05815751200847479) -= (0,0.05815751200847479)
                     };
 
                     \addplot[style={fill=orange},
@@ -483,32 +486,31 @@
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos com \texttt{50MB} ocupados, 4.866666666666665) += (0,0.06325911258107837) -= (0,0.06325911258107837)
                     };
+
                     \addplot[style={fill=purple},
                     error bars/.cd,
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos com \texttt{50MB} ocupados, 4.8954666666666675) += (0,0.05888239409881237) -= (0,0.05888239409881237)
                     };
-                    \addplot[style={fill=black},
+
+                    \addplot[style={fill=white},
                     error bars/.cd,
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos com \texttt{50MB} ocupados, 4.8537333333333335) += (0,0.04546235865175731) -= (0,0.04546235865175731)
                     };
+
                     \addplot[style={fill=brown},
                     error bars/.cd,
                     y dir=both,
                     y explicit]
                     coordinates {
-                        (Sistema de arquivos com \texttt{10MB} ocupado, 1.316)
-                        += (0,0.0787) -= (0,0.0787)
+                        (Sistema de arquivos com \texttt{50MB} ocupados, 4.875166666666667) += (0,0.06050618529693447) -= (0,0.06050618529693447)
                     };
 
                 \legend{Operação 1, Operação 2, Operação 3, Operação 4, Operação
@@ -517,12 +519,53 @@
             \end{tikzpicture}
     \end{frame}
 
-    \begin{frame}{Experimentos - Especificações do SO}
-
+    \begin{frame}{Experimentos - Especificações do hardware e SO}
+        \begin{itemize}
+            \justifying
+            \item Os testes foram executados em um Ubuntu 20.10 com versão do
+                kernel 5.8.0-31-generic e sistema de arquivos EXT4 com
+                journaling.
+            \item O SO em questão se encontra dentro de uma máquina virtual
+            \item O hardware utilizado foi:
+                \begin{itemize}
+                    \justifying
+                    \item processador Intel i7 7700 3.6GHz com 4 cores dedicados
+                        para a VM
+                    \item memória 12Gb de memória RAM 2400MHz dedicados para a
+                        VM
+                    \item disco HD WD SATA 7200RPM 6,0Gb/s
+                \end{itemize}
+        \end{itemize}
     \end{frame}
 
     \begin{frame}{Conclusões - Tempo}
+        \begin{itemize}
+            \justifying
+            \item É possível observar que o tempo de execução das operações em
+                um mesmo sistema de arquivos levam uma quantidade de tempo
+                similar;
+            \item Isso se deve ao fato de que na nossa implementação, precisamos
+                dar \texttt{umount} para salvar as alterações de um comando no
+                disco. Assim sendo, em todos nossos testes, além dos comandos
+                pedidos, também executamos \texttt{mount}, \texttt{umount} e
+                \texttt{sai};
+            \item O tempo de execução foi, portanto, dominado por esses comandos
+                e vemos que existe pouca diferença entre o tempo de execução de
+                cada operação (mesmo quando removemos vários subdiretórios e
+                arquivos no teste 8);
+        \end{itemize}
+
     \end{frame}
+
+    \begin{frame}{conclusões - Tempo}
+        \begin{itemize}
+            \justifying
+            \item Além disso, podemos observar que o tempo gasto por teste aumenta
+                linearmente com a quantidade de bytes ocupados (mesmo
+                mantendo \texttt{100MB} fixos para o disco).
+        \end{itemize}
+    \end{frame}
+
     \begin{frame}
         \centering
         {\huge Obrigado!}
